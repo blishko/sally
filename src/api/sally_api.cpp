@@ -1,0 +1,75 @@
+//
+// Created by Martin Blicha on 2019-01-17.
+//
+
+#include "sally_api.h"
+#include <utils/statistics.h>
+#include <expr/term_manager.h>
+#include <system/context.h>
+#include <engine/factory.h>
+#include <parser/parser.h>
+#include "parse_options.h"
+
+#include <memory>
+
+#include <boost/program_options/variables_map.hpp>
+
+namespace sally {
+
+struct api_context {
+  std::unique_ptr<utils::statistics> stats;
+  std::unique_ptr<options> opts;
+  std::unique_ptr<expr::term_manager> term_manager;
+  std::unique_ptr<system::context> context;
+  std::unique_ptr<engine> engine;
+  std::unique_ptr<boost::program_options::variables_map> boost_options;
+};
+
+namespace{
+std::vector<std::string> map_to_cmdline(std::map<std::string, std::string> const & opts) {
+  std::vector<std::string> res;
+  for (const auto & entry : opts) {
+    res.push_back(entry.first);
+    res.push_back(entry.second);
+  }
+  return res;
+}
+}
+
+sally_context create_context(std::map<std::string, std::string> const & option_map ){
+  sally_context ctx = new api_context();
+  ctx->boost_options = std::unique_ptr<boost::program_options::variables_map>(new boost::program_options::variables_map());
+  // create options
+  std::vector<std::string> parsed_cmdline = map_to_cmdline(option_map);
+  std::vector<char*> parsed_cmdline_old;
+  for (auto const & s : parsed_cmdline) {
+    parsed_cmdline_old.push_back(const_cast<char*>(s.c_str()));
+  }
+  parse_options(parsed_cmdline.size(), &parsed_cmdline_old[0], *ctx->boost_options);
+  ctx->stats = std::unique_ptr<utils::statistics>(new utils::statistics());
+  ctx->term_manager = std::unique_ptr<expr::term_manager>(new expr::term_manager(*ctx->stats));
+  ctx->opts = std::unique_ptr<options>( new options(*ctx->boost_options));
+  ctx->context = std::unique_ptr<system::context>( new system::context(*ctx->term_manager, *ctx->opts, *ctx->stats));
+  return ctx;
+}
+
+void delete_context(sally_context ctx) {
+  delete ctx;
+}
+
+void run_on_file(std::string file, sally_context ctx) {
+  auto & context = ctx->context;
+  auto & engine = ctx->engine;
+  // Create the parser
+  parser::input_language language = parser::parser::guess_language(file);
+  parser::parser p(*context, language, file.c_str());
+
+  // Parse an process each command
+  for (cmd::command* cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
+    // Run the command
+    cmd->run(context.get(), engine.get());
+  }
+}
+
+}
+

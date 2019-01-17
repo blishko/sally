@@ -6,7 +6,7 @@ foreach(DIR ${sally_SRC_DIRS})
 endforeach(DIR)
 
 # Add the executable
-add_executable(sally sally.cpp)
+add_executable(sally sally.cpp parse_options.cpp)
 if (SALLY_STATIC_BUILD)
 	set_target_properties(sally PROPERTIES LINK_FLAGS "-static")
 	set_target_properties (sally PROPERTIES LINK_SEARCH_START_STATIC ON)
@@ -18,7 +18,7 @@ add_dependencies(check sally)
 
 # Link in all the directories
 foreach(DIR ${sally_SRC_DIRS})
-  link_directories(${sally_BINARY_DIR}/src/${DIR})
+  #link_directories(${sally_BINARY_DIR}/src/${DIR})
   set(sally_LIBS ${DIR} ${sally_LIBS})
 endforeach(DIR)
 
@@ -76,7 +76,11 @@ foreach(FILE ${regressions})
   
 endforeach(FILE)
 
+# Add api subdirectory
+add_subdirectory(api)
+
 # Add the install target
 install(TARGETS sally DESTINATION bin)
 target_link_libraries(sally libantlr3c)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
