@@ -101,6 +101,18 @@ parser::parser(const system::context& ctx, input_language lang, const char* file
   }
 }
 
+parser::parser(const system::context& ctx, input_language lang, std::string const & content)
+{
+  switch (lang) {
+    case INPUT_MCMT:
+      d_internal = new_mcmt_parser(ctx, content);
+      break;
+    default:
+      throw std::logic_error("Not implemented for other types of input than MCMT");
+      assert(false);
+  }
+}
+
 parser::~parser() {
   delete d_internal;
 }

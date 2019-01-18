@@ -100,6 +100,9 @@ public:
   /** Create a parser for the given language */
   parser(const system::context& ctx, input_language lang, const char* filename);
 
+  /** Create a parser for the given language for given content */
+  parser(const system::context& ctx, input_language lang, std::string const & content);
+
   /** Destroy the parser */
   ~parser();
 

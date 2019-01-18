@@ -48,6 +48,10 @@ internal_parser_interface* new_mcmt_parser(const system::context& ctx, const cha
   return new antlr_parser<INPUT_MCMT>(ctx, filename);
 }
 
+internal_parser_interface* new_mcmt_parser(const system::context& ctx, std::string const & content) {
+  return new antlr_parser<INPUT_MCMT>(ctx, content);
+}
+
 
 }
 }

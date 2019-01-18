@@ -56,6 +56,48 @@ class antlr_parser : public internal_parser_interface, public expr::gc_participa
 
 public:
 
+  antlr_parser(const system::context& ctx, std::string const & content)
+    : gc_participant(ctx.tm())
+    , d_state(ctx)
+  {
+    // Create the input stream for the file
+    d_input = antlr3StringStreamNew((pANTLR3_UINT8)content.c_str(), ANTLR3_ENC_8BIT, content.size(), (pANTLR3_UINT8)"instance");
+    if (d_input == 0) {
+      throw parser_exception(std::string("Error when trying to parse given string"));
+    }
+
+    // Create a lexer
+    d_lexer = antlr_parser_traits<lang>::newLexer(d_input);
+    if (d_lexer == 0) {
+      throw parser_exception("can't create the lexer");
+    }
+
+    // Report the error
+    d_lexer->pLexer->rec->reportError = sally_lexer_reportError;
+
+    // Create the token stream
+    d_token_stream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, d_lexer->pLexer->rec->state->tokSource);
+    if (d_token_stream == 0) {
+      throw parser_exception("can't create the token stream");
+    }
+
+    // Create the parser
+    d_parser = antlr_parser_traits<lang>::newParser(d_token_stream);
+    if (d_parser == 0) {
+      throw parser_exception("can't create the parser");
+    }
+
+    // Mark the internals in the super fields
+    d_parser->pParser->super = this;
+    d_lexer->pLexer->super = this;
+
+    // Mark the state
+    d_parser->pState = &d_state;
+
+    // Add error reporting
+    d_parser->pParser->rec->reportError = sally_parser_reportError;
+  }
+
   antlr_parser(const system::context& ctx, const char* file_to_parse)
   : gc_participant(ctx.tm())
   , d_state(ctx)
