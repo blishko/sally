@@ -7,6 +7,7 @@
 #include <expr/term_manager.h>
 #include <system/context.h>
 #include <engine/factory.h>
+#include <smt/factory.h>
 #include <parser/parser.h>
 #include "parse_options.h"
 
@@ -28,10 +29,14 @@ struct api_context {
 namespace{
 std::vector<std::string> map_to_cmdline(std::map<std::string, std::string> const & opts) {
   std::vector<std::string> res;
+  // add auxiliary first argument -> name of the script
+  res.push_back("phony");
   for (const auto & entry : opts) {
-    res.push_back(entry.first);
+    res.push_back("--" + entry.first);
     res.push_back(entry.second);
   }
+  // add auxiliary last argument -> file to run
+  res.push_back("phony2");
   return res;
 }
 }
@@ -50,6 +55,12 @@ sally_context create_context(std::map<std::string, std::string> const & option_m
   ctx->term_manager = std::unique_ptr<expr::term_manager>(new expr::term_manager(*ctx->stats));
   ctx->opts = std::unique_ptr<options>( new options(*ctx->boost_options));
   ctx->context = std::unique_ptr<system::context>( new system::context(*ctx->term_manager, *ctx->opts, *ctx->stats));
+  assert(ctx->opts->has_option("engine"));
+  assert(ctx->opts->has_option("solver"));
+  smt::factory::set_default_solver(ctx->opts->get_string("solver"));
+  if (ctx->opts->has_option("engine")) {
+      ctx->engine = std::unique_ptr<engine>(engine_factory::mk_engine(ctx->opts->get_string("engine"), *ctx->context));
+  }
   return ctx;
 }
 
@@ -58,11 +69,28 @@ void delete_context(sally_context ctx) {
 }
 
 void run_on_file(std::string file, sally_context ctx) {
+  assert(ctx->context);
+  assert(ctx->engine);
+
   auto & context = ctx->context;
   auto & engine = ctx->engine;
   // Create the parser
   parser::input_language language = parser::parser::guess_language(file);
   parser::parser p(*context, language, file.c_str());
+
+  // Parse an process each command
+  for (cmd::command* cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
+    // Run the command
+    cmd->run(context.get(), engine.get());
+  }
+}
+
+void run_on_mcmt_string(std::string const & content, sally_context ctx) {
+  auto & context = ctx->context;
+  auto & engine = ctx->engine;
+  // Create the parser
+  parser::input_language language = parser::INPUT_MCMT;
+  parser::parser p(*context, language, content);
 
   // Parse an process each command
   for (cmd::command* cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {

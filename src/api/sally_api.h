@@ -32,6 +32,8 @@ void delete_context(sally_context);
 
 void run_on_file(std::string file, sally_context ctx);
 
+void run_on_mcmt_string(std::string const & content, sally_context ctx);
+
 }
 
 #endif //SALLY_SALLY_API_H
