@@ -10,6 +10,7 @@
 #include <smt/factory.h>
 #include <parser/parser.h>
 #include "parse_options.h"
+#include <iostream>
 
 #include <memory>
 
@@ -86,16 +87,20 @@ void run_on_file(std::string file, sally_context ctx) {
 }
 
 void run_on_mcmt_string(std::string const & content, sally_context ctx) {
-  auto & context = ctx->context;
-  auto & engine = ctx->engine;
-  // Create the parser
-  parser::input_language language = parser::INPUT_MCMT;
-  parser::parser p(*context, language, content);
+  try {
+    auto &context = ctx->context;
+    auto &engine = ctx->engine;
+    // Create the parser
+    parser::input_language language = parser::INPUT_MCMT;
+    parser::parser p(*context, language, content);
 
-  // Parse an process each command
-  for (cmd::command* cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
-    // Run the command
-    cmd->run(context.get(), engine.get());
+    // Parse an process each command
+    for (cmd::command *cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
+      // Run the command
+      cmd->run(context.get(), engine.get());
+    }
+  }catch (sally::exception &ex){
+    throw std::logic_error("Sally exception: " + ex.get_message());
   }
 }
 
