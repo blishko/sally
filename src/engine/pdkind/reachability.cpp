@@ -213,6 +213,8 @@ void reachability::add_to_frame(size_t k, expr::term_ref f) {
   d_smt->add_to_reachability_solver(k, f);
   // Remember
   d_frame_content[k].insert(f);
+  // Run hook
+  if (new_reachability_lemma_hook) { new_reachability_lemma_hook(k, f); }
 }
 
 void reachability::init(const system::transition_system* transition_system, solvers* smt_solvers) {
@@ -229,6 +231,10 @@ void reachability::clear() {
 
 void reachability::gc_collect(const expr::gc_relocator& gc_reloc) {
   // TODO
+}
+
+void reachability::set_reachability_lemma(void (*hook)(size_t, expr::term_ref)) {
+    this->new_reachability_lemma_hook = hook;
 }
 
 }

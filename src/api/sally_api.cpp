@@ -27,6 +27,13 @@ struct api_context {
   std::unique_ptr<boost::program_options::variables_map> boost_options;
 };
 
+struct reachability_lemma {
+    /** reachibility frame */
+    size_t d_k;
+    /** The formula */
+    expr::term_ref d_P;
+};
+
 namespace{
 std::vector<std::string> map_to_cmdline(std::map<std::string, std::string> const & opts) {
   std::vector<std::string> res;
@@ -102,6 +109,10 @@ void run_on_mcmt_string(std::string const & content, sally_context ctx) {
   }catch (sally::exception &ex){
     throw std::logic_error("Sally exception: " + ex.get_message());
   }
+}
+
+void set_new_reachability_lemma_eh(sally_context ctx, void(*lemma_eh)(sally_reachability_lemma)) {
+
 }
 
 }

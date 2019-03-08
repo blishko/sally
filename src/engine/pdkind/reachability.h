@@ -85,7 +85,11 @@ private:
    */
   result check_reachable(size_t k, expr::term_ref f, size_t property_id);
 
+  void(*new_reachability_lemma_hook)(size_t, expr::term_ref) = 0;
+
 public:
+
+  void set_reachability_lemma(void(*hook)(size_t level, expr::term_ref f));
 
   /** Construct the reachability checker */
   reachability(const system::context& ctx, cex_manager& cm);
