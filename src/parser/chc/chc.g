@@ -67,6 +67,7 @@ chc_declare_fun
          STATE->declare_function(id, arg_types); 
        }
     ')'
+  | '(' 'declare-fun' 'fail' '(' ')' 'Bool' ')'
   ;
 
 chc_assert 
