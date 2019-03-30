@@ -36,10 +36,12 @@ namespace parser {
 void chc_system::add_rule(term_ref head, term_ref tail) {
 
   // All the head variables should be distinct
+  auto additional_equalities = ensure_distinct(head);
 
   // Normalize head
   auto subst = normalize_head(head);
   // Normalize tail
+  tail = ctx.tm().mk_and(tail, ctx.tm().mk_and(additional_equalities));
   normalize_tail(tail, subst);
 
   d_rules[head].push_back(tail);
@@ -93,6 +95,12 @@ size_t chc_system::get_number_of_predicates() const {
   return d_rules.size() - 1;
 }
 
+expr::term_ref chc_system::get_fresh_variable_of_type(expr::term_ref type) {
+  auto& tm = ctx.tm();
+  std::string fresh_name = tm.get_fresh_variable_name();
+  return tm.mk_variable(fresh_name, type);
+}
+
 substituition chc_system::normalize_head(term_ref &head) {
   substituition sub;
   auto& tm = ctx.tm();
@@ -103,9 +111,8 @@ substituition chc_system::normalize_head(term_ref &head) {
   if ( it == d_normalized.end()) {
     term_vec fresh_vars;
     for (size_t i = 0; i < vars.size(); ++i) {
-      std::string fresh_name = tm.get_fresh_variable_name();
       term_ref type = tm.term_of(vars[i])[0];
-      fresh_vars.push_back(tm.mk_variable(fresh_name, type));
+      fresh_vars.push_back(get_fresh_variable_of_type(type));
     }
     auto res = d_normalized.insert(std::make_pair(predicate, fresh_vars));
     it = res.first;
@@ -140,10 +147,34 @@ chc_system::term_vec chc_system::get_arguments(expr::term_ref head) const {
     args.push_back(term.child(i));
   }
   return args;
-
 }
 
-cmd::command *chc_system::to_transition_system() const {
+chc_system::term_vec chc_system::ensure_distinct(expr::term_ref& head) {
+  chc_system::term_vec additional_equalities;
+  substituition sub;
+  std::set<term_ref> seen;
+  auto& tm = ctx.tm();
+  auto args = get_arguments(head);
+  auto new_args = args;
+  for (size_t i = 0; i < args.size(); ++i) {
+    term_ref var = args[i];
+    auto it = seen.find(var);
+    if (it == seen.end()) {
+      seen.insert(var);
+    }
+    else {
+      auto new_var = get_fresh_variable_of_type(tm.term_of(var)[0]);
+      new_args[i] = new_var;
+      additional_equalities.push_back(tm.mk_term(TERM_EQ, var, new_var));
+    }
+  }
+  if (args != new_args) {
+    head = tm.mk_function_application(tm.term_of(head)[0], new_args);
+  }
+  return additional_equalities;
+}
+
+cmd::command *chc_system::to_transition_system() {
   std::pair<term_ref, term_ref> init_rule;
   std::pair<term_ref, term_ref> transition_rule;
   std::pair<term_ref, term_ref> query_rule;
@@ -201,7 +232,12 @@ cmd::command *chc_system::to_transition_system() const {
   // Identify the various classes of variables
   // "vars" already contains the variables from predicate of Init and from output predicate of Trans
   // get the input variables of transition
-  auto trans_input_vars = remove_predicate_and_extract_vars(transition_fla, predicate);
+  auto p_term = extract_predicate_from_tail(transition_fla, predicate);
+  {
+    auto body_equalities = ensure_distinct(p_term);
+    transition_fla = tm.mk_and(transition_fla, tm.mk_and(body_equalities));
+  }
+  auto trans_input_vars = get_arguments(p_term);
   // now the transition formula does not contain the predicate anymore
   // get the additional variables
   std::set<term_ref> additional_vars;
@@ -224,9 +260,6 @@ cmd::command *chc_system::to_transition_system() const {
   }
   // then the additional vars
   for (auto var : additional_vars) {
-//    std::cout << var << '\n';
-//    std::cout << tm.get_variable_name(var) << '\n';
-//    std::cout << tm.term_of(var)[0] << std::endl;
     state_vars.push_back(tm.get_variable_name(var));
     state_types.push_back(tm.term_of(var)[0]);
   }
@@ -247,7 +280,7 @@ cmd::command *chc_system::to_transition_system() const {
   }
   init_fla = tm.substitute(init_fla, sub.mapping);
   assert(st->is_state_formula(init_fla));
-//  std::cout << init_fla << std::endl;
+//  std::cout << "Init formula: " << init_fla << std::endl;
   system::state_formula* init_states = new system::state_formula(tm, st, init_fla);
 
 
@@ -326,20 +359,22 @@ cmd::command *chc_system::to_transition_system() const {
 }
 
 chc_system::term_vec chc_system::remove_predicate_and_extract_vars(expr::term_ref &tail, expr::term_ref predicate) const {
+  auto p_term = extract_predicate_from_tail(tail, predicate);
+  return get_arguments(p_term);
+}
+
+expr::term_ref chc_system::extract_predicate_from_tail(expr::term_ref &tail, expr::term_ref predicate_symbol) const {
   auto& tm = ctx.tm();
   term_vec args;
   tm.get_conjuncts(tail, args);
   auto it = std::find_if(args.begin(), args.end(),
-    [&,predicate](term_ref ref) { return tm.term_of(ref).op() == TERM_FUN_APP && tm.term_of(ref).child(0) == predicate; });
+                         [&,predicate_symbol](term_ref ref)
+                         { return tm.term_of(ref).op() == TERM_FUN_APP && tm.term_of(ref).child(0) == predicate_symbol; });
   assert(it != args.end());
-  term_vec predicate_vars;
-  const term &tail_predicate = tm.term_of(*it);
-  for(size_t k = 1; k < tail_predicate.size(); ++k) {
-    predicate_vars.push_back(tail_predicate.child(k));
-  }
+  auto ret = *it;
   args.erase(it);
   tail = tm.mk_and(args);
-  return predicate_vars;
+  return ret;
 }
 
 }

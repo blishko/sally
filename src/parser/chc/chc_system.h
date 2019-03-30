@@ -75,9 +75,15 @@ private:
 
   term_vec get_arguments(expr::term_ref head) const;
 
+  expr::term_ref extract_predicate_from_tail(expr::term_ref& tail, expr::term_ref predicate_symbol) const;
+
   term_vec remove_predicate_and_extract_vars(expr::term_ref& tail, expr::term_ref predicate) const;
 
-  cmd::command* to_transition_system() const;
+  term_vec ensure_distinct(expr::term_ref& head);
+
+  expr::term_ref get_fresh_variable_of_type(expr::term_ref type);
+
+  cmd::command* to_transition_system();
 
 
 };
