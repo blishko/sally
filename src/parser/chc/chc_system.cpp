@@ -168,9 +168,15 @@ cmd::command *chc_system::to_transition_system() const {
         if (is_init) {
           vars = get_arguments(it->first);
           init_rule = std::make_pair(it->first, body);
+//          std::cout << "Init rule:\n";
+//          std::cout << it->first << '\n';
+//          std::cout << body << std::endl;
         }
         else {
           transition_rule = std::make_pair(it->first, body);
+//          std::cout << "Transition rule:\n";
+//          std::cout << it->first << '\n';
+//          std::cout << body << std::endl;
         }
       }
     }
@@ -203,9 +209,9 @@ cmd::command *chc_system::to_transition_system() const {
 
     tm.get_variables(transition_fla, additional_vars);
     std::for_each(trans_input_vars.begin(), trans_input_vars.end(),
-      [&](term_ref var){ assert(additional_vars.count(var) > 0); additional_vars.erase(var); });
+      [&](term_ref var){ additional_vars.erase(var); });
     std::for_each(vars.begin(), vars.end(),
-                  [&](term_ref var){ assert(additional_vars.count(var) > 0); additional_vars.erase(var); });
+                  [&](term_ref var){ additional_vars.erase(var); });
   }
 
   // make state type
@@ -262,13 +268,33 @@ cmd::command *chc_system::to_transition_system() const {
   transition_fla = tm.substitute(transition_fla, sub.mapping);
 //  std::cout << "After first substituition" << transition_fla << std::endl;
   // remove the predicate, and substitute its variable
+  // if any input variable is already an output variable, simply add the equality same(var) (that is var == var')
   // TODO: check that all variables are different
+  std::vector<term_ref> additional_equalities;
   sub.clear();
   assert(trans_input_vars.size() + additional_vars.size() == state_current.size());
   for (size_t i = 0; i < trans_input_vars.size(); ++i ) {
+    // check that input var is not also output var -> otherwise we need to add equality in the tansition
+    auto var = trans_input_vars[i];
+    auto it = std::find(vars.begin(), vars.end(), var);
+    if (it != vars.end()) {
+      auto out_index = it - vars.begin();
+      additional_equalities.push_back(tm.mk_term(TERM_EQ, state_current[i], state_next[out_index]));
+#ifndef NDEBUG
+      // transition formula should not contain the input variable at this point anymore
+      std::set<term_ref> tmp;
+      tm.get_variables(transition_fla, tmp);
+      auto tmp_it = std::find(tmp.begin(), tmp.end(), var);
+      assert(tmp_it == tmp.end());
+#endif // NDEBUG
+    }
+//    std::cout << "Adding substituition: " << trans_input_vars[i] << " -> " << state_current[i] << std::endl;
     sub.add(trans_input_vars[i], state_current[i]);
   }
   transition_fla = tm.substitute(transition_fla, sub.mapping);
+  if (!additional_equalities.empty()) {
+    transition_fla = tm.mk_and(transition_fla, tm.mk_and(additional_equalities));
+  }
 //  std::cout << "After second substituition" << transition_fla << std::endl;
   assert(st->is_transition_formula(transition_fla));
   system::transition_formula* transition_relation = nullptr;
@@ -276,6 +302,7 @@ cmd::command *chc_system::to_transition_system() const {
   system::transition_system* system = new system::transition_system(st, init_states, transition_relation);
   std::string system_id = "CHC";
   cmd_seq->push_back(new cmd::define_transition_system(system_id, system));
+//  std::cout << *system;
 
   // create query formula;
   expr::term_ref query_fla = query_rule.second;
