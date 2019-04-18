@@ -109,6 +109,7 @@ std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term
   auto &context = ctx->context;
   auto& term = context->tm().term_of(term_ref);
   std::stringstream ss;
+  ss << expr::set_tm(context->tm());
   ss << term;
   return ss.str();
 }
