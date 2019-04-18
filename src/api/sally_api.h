@@ -19,13 +19,14 @@ class statistics;
 }
 namespace expr{
 class term_manager;
+class term_ref;
 }
 class options;
 class engine;
 // END OF FORWARD DECLARATIONS
 
 typedef struct api_context* sally_context;
-typedef struct reachability_lemma* sally_reachability_lemma;
+typedef void (*sally_new_lemma_eh)(void *, size_t, const sally::expr::term_ref&);
 
 sally_context create_context(std::map<std::string, std::string> const & options );
 
@@ -35,7 +36,9 @@ void run_on_file(std::string file, sally_context ctx);
 
 void run_on_mcmt_string(std::string const & content, sally_context ctx);
 
-void set_new_reachability_lemma_eh(sally_context ctx, void(*lemma_eh)(sally_reachability_lemma));
+void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh);
+
+std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 
 }
 

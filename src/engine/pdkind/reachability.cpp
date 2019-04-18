@@ -16,6 +16,7 @@ reachability::reachability(const system::context& ctx, cex_manager& cm)
 , d_transition_system(0)
 , d_smt(0)
 , d_cex_manager(cm)
+, new_reachability_lemma_hook(0)
 {
   d_stats.reachable = new utils::stat_int("sally::pdkind::reachable", 0);
   d_stats.unreachable = new utils::stat_int("sally::pdkind::unreachable", 0);
@@ -233,7 +234,7 @@ void reachability::gc_collect(const expr::gc_relocator& gc_reloc) {
   // TODO
 }
 
-void reachability::set_reachability_lemma(void (*hook)(size_t, expr::term_ref)) {
+void reachability::set_reachability_lemma(std::function<void(size_t, expr::term_ref)> hook) {
     this->new_reachability_lemma_hook = hook;
 }
 

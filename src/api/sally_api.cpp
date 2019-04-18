@@ -10,6 +10,7 @@
 #include <smt/factory.h>
 #include <parser/parser.h>
 #include "parse_options.h"
+#include <engine/pdkind/pdkind_engine.h>
 #include <iostream>
 
 #include <memory>
@@ -25,13 +26,6 @@ struct api_context {
   std::unique_ptr<system::context> context;
   std::unique_ptr<engine> engine;
   std::unique_ptr<boost::program_options::variables_map> boost_options;
-};
-
-struct reachability_lemma {
-    /** reachibility frame */
-    size_t d_k;
-    /** The formula */
-    expr::term_ref d_P;
 };
 
 namespace{
@@ -111,7 +105,19 @@ void run_on_mcmt_string(std::string const & content, sally_context ctx) {
   }
 }
 
-void set_new_reachability_lemma_eh(sally_context ctx, void(*lemma_eh)(sally_reachability_lemma)) {
+std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term_ref) {
+  auto &context = ctx->context;
+  auto& term = context->tm().term_of(term_ref);
+  std::stringstream ss;
+  ss << term;
+  return ss.str();
+}
+
+void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh) {
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
+  if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
+  auto hook = [lemma_eh, ctx](size_t lvl, expr::term_ref term) { lemma_eh(ctx, lvl, term); };
+  engine->set_new_reachability_lemma_eh(hook);
 
 }
 
