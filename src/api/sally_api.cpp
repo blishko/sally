@@ -120,10 +120,10 @@ void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_e
   engine->set_new_reachability_lemma_eh(ctx, lemma_eh);
 }
 
-void add_next_frame_eh(sally_context ctx, sally_general_eh eh) {
+void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
   auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
-  engine->add_next_frame_eh(ctx, eh);
+  engine->add_next_frame_eh(state, eh);
 }
 
 }

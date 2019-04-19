@@ -39,7 +39,7 @@ void run_on_mcmt_string(std::string const & content, sally_context ctx);
 
 void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh);
 
-void add_next_frame_eh(sally_context ctx, sally_general_eh);
+void add_next_frame_eh(sally_context ctx, sally_general_eh, void*);
 
 std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 
