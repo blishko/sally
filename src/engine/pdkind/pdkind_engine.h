@@ -235,8 +235,8 @@ public:
   /** Collect terms */
   void gc_collect(const expr::gc_relocator& gc_reloc);
 
-  void set_new_reachability_lemma_eh(std::function<void(size_t, expr::term_ref)> hook) {
-    this->d_reachability.set_reachability_lemma(hook);
+  void set_new_reachability_lemma_eh(void* ctx, reachability::lemma_eh_t eh) {
+    this->d_reachability.set_reachability_lemma(ctx, eh);
   }
 
 };

@@ -117,8 +117,7 @@ std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term
 void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh) {
   auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
-  auto hook = [lemma_eh, ctx](size_t lvl, expr::term_ref term) { lemma_eh(ctx, lvl, term); };
-  engine->set_new_reachability_lemma_eh(hook);
+  engine->set_new_reachability_lemma_eh(ctx, lemma_eh);
 
 }
 

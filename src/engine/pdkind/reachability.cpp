@@ -16,7 +16,6 @@ reachability::reachability(const system::context& ctx, cex_manager& cm)
 , d_transition_system(0)
 , d_smt(0)
 , d_cex_manager(cm)
-, new_reachability_lemma_hook(0)
 {
   d_stats.reachable = new utils::stat_int("sally::pdkind::reachable", 0);
   d_stats.unreachable = new utils::stat_int("sally::pdkind::unreachable", 0);
@@ -214,8 +213,10 @@ void reachability::add_to_frame(size_t k, expr::term_ref f) {
   d_smt->add_to_reachability_solver(k, f);
   // Remember
   d_frame_content[k].insert(f);
-  // Run hook
-  if (new_reachability_lemma_hook) { new_reachability_lemma_hook(k, f); }
+  // Run hooks
+  for (size_t i = 0; i < callbacks.size(); ++i) {
+    callbacks[i].lemma_learnt(k,f);
+  }
 }
 
 void reachability::init(const system::transition_system* transition_system, solvers* smt_solvers) {
@@ -234,9 +235,10 @@ void reachability::gc_collect(const expr::gc_relocator& gc_reloc) {
   // TODO
 }
 
-void reachability::set_reachability_lemma(std::function<void(size_t, expr::term_ref)> hook) {
-    this->new_reachability_lemma_hook = hook;
+void reachability::set_reachability_lemma(void* ctx, lemma_eh_t eh) {
+  callbacks.push_back(learnt_lemma_callback(ctx, eh));
 }
+
 
 }
 }

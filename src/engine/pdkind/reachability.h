@@ -20,6 +20,7 @@
 namespace sally {
 namespace pdkind {
 
+
 class reachability : public expr::gc_participant {
 
 public:
@@ -86,11 +87,11 @@ private:
    */
   result check_reachable(size_t k, expr::term_ref f, size_t property_id);
 
-  std::function<void(size_t, expr::term_ref)> new_reachability_lemma_hook;
-
 public:
+  typedef void (*lemma_eh_t)(void *, size_t, const sally::expr::term_ref&);
+//  using lemma_eh_t = void(*)(void*, size_t, const expr::term_ref &);
 
-  void set_reachability_lemma(std::function<void(size_t, expr::term_ref)> hook);
+  void set_reachability_lemma(void* ctx, lemma_eh_t eh);
 
   /** Construct the reachability checker */
   reachability(const system::context& ctx, cex_manager& cm);
@@ -125,6 +126,23 @@ public:
 
   /** Collect terms */
   void gc_collect(const expr::gc_relocator& gc_reloc);
+
+  struct learnt_lemma_callback {
+    learnt_lemma_callback(void* ctx, reachability::lemma_eh_t callback):
+      ctx(ctx),
+      callback(callback)
+    {}
+
+    void lemma_learnt(size_t lvl, expr::term_ref term) {
+      this->callback(this->ctx, lvl, term);
+    }
+  private:
+    void* ctx;
+    reachability::lemma_eh_t callback;
+  };
+
+private:
+  std::vector<learnt_lemma_callback> callbacks;
 
 };
 
