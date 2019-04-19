@@ -80,6 +80,8 @@ class pdkind_engine : public engine {
 
   typedef std::set<expr::term_ref> formula_set;
 
+  typedef void(*general_eh_t)(void*);
+
   /** The transition system */
   const system::transition_system* d_transition_system;
 
@@ -238,6 +240,27 @@ public:
   void set_new_reachability_lemma_eh(void* ctx, reachability::lemma_eh_t eh) {
     this->d_reachability.set_reachability_lemma(ctx, eh);
   }
+
+  void add_next_frame_eh(void* ctx, general_eh_t eh) {
+    this->next_frame_ehs.push_back(general_callback(ctx, eh));
+  }
+
+  struct general_callback {
+    general_callback(void* ctx, general_eh_t callback):
+      ctx(ctx),
+      callback(callback)
+    {}
+
+    void call() {
+      this->callback(this->ctx);
+    }
+  private:
+    void* ctx;
+    general_eh_t callback;
+  };
+
+private:
+  std::vector<general_callback> next_frame_ehs;
 
 };
 

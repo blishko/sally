@@ -334,6 +334,11 @@ engine::result pdkind_engine::search() {
       d_smt->minimize_frame(d_induction_obligations_next);
     }
 
+    // Call hooks
+    for (size_t i = 0; i < next_frame_ehs.size(); ++i) {
+      next_frame_ehs[i].call();
+    }
+
     // Add formulas to the new frame
     d_induction_frame.clear();
     std::vector<induction_obligation>::const_iterator next_it = d_induction_obligations_next.begin();
