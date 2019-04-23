@@ -136,8 +136,16 @@ void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
 }
 
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref &lemma_ref) {
+  auto tm = ctx->term_manager.get();
+  auto state_type = ctx->engine->get_current_transition_system()->get_state_type();
+  state_type->use_namespace();
+  state_type->use_namespace(system::state_type::STATE_CURRENT);
   std::string lemma_str = ctx->term_manager->to_string(lemma_ref);
-  std::string command = "( lemma " + std::to_string(level) + ' ' + lemma_str + " )";
+  tm->pop_namespace();
+  tm->pop_namespace();
+  assert(ctx->engine->get_current_transition_system());
+  std::string system_id = ctx->engine->get_current_transition_system()->get_id();
+  std::string command = "( lemma " + system_id + ' ' + std::to_string(level) + ' ' + lemma_str + " )";
   return command;
 }
 
