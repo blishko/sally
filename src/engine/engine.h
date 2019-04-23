@@ -90,6 +90,9 @@ public:
   virtual
   void add_reachability_lemma(size_t level, expr::term_ref lemma) {}
 
+  virtual
+  const system::transition_system* get_current_transition_system() const { return 0; }
+
 };
 
 std::ostream& operator << (std::ostream& out, engine::result result);
