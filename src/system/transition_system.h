@@ -30,6 +30,9 @@ namespace system {
 
 class transition_system {
 
+  /** id if the system */
+  std::string d_id;
+
   /** The state information */
   const state_type* d_state_type;
 
@@ -67,7 +70,7 @@ class transition_system {
 
 public:
 
-  transition_system(const state_type* state_type, state_formula* initial_states, transition_formula* transition_relation);
+  transition_system(std::string id, const state_type* state_type, state_formula* initial_states, transition_formula* transition_relation);
   ~transition_system();
 
   /** Get the state type */
@@ -83,6 +86,11 @@ public:
 
   /** Get the trace helper */
   trace_helper* get_trace_helper() const;
+
+  /** Get the id */
+  std::string get_id() const {
+    return d_id;
+  }
 
   /** Add an assumption on the state type (takes over the pointer) */
   void add_assumption(state_formula* assumption);

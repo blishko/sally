@@ -144,7 +144,7 @@ define_transition_system returns [cmd::command* cmd = 0]
       initial_states = state_formula[state_type]
       transition_relation = state_transition_formula[state_type]    
       {  
-      	system::transition_system* T = new system::transition_system(state_type, initial_states, transition_relation); 
+        system::transition_system* T = new system::transition_system(id, state_type, initial_states, transition_relation);
         $cmd = new cmd::define_transition_system(id, T);
       } 
     ')'
@@ -186,13 +186,18 @@ query returns [cmd::command* cmd = 0]
 lemma returns [cmd::command* cmd = 0]
 @declarations {
   size_t val;
+  std::string id;
+  const system::state_type* state_type;
 }
   : '(' 'lemma'
+    symbol[id, parser::MCMT_TRANSITION_SYSTEM, true] {
+    state_type = STATE->ctx().get_transition_system(id)->get_state_type();
+    }
     NUMERAL {
       val = (size_t)std::stoi(STATE->token_text($NUMERAL));
     }
-    f = term {
-      $cmd = new cmd::frame_lemma(val, f, STATE->tm());
+    f = state_formula[state_type] {
+      $cmd = new cmd::frame_lemma(val, f->get_formula(), STATE->tm());
     }
     ')'
 ;

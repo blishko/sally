@@ -23,8 +23,9 @@
 namespace sally {
 namespace system {
 
-transition_system::transition_system(const state_type* state_type, state_formula* initial_states, transition_formula* transition_relation)
-: d_state_type(state_type)
+transition_system::transition_system(std::string id, const state_type* state_type, state_formula* initial_states, transition_formula* transition_relation)
+: d_id(id)
+, d_state_type(state_type)
 , d_initial_states(initial_states)
 , d_transition_relation(transition_relation)
 {

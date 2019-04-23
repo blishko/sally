@@ -250,8 +250,9 @@ aiger_parser::aiger_parser(const system::context& ctx, const char* filename)
   system::transition_formula* transition_formula = new system::transition_formula(d_tm, state_type, transition);
 
   // Define system
-  system::transition_system* aiger_system = new system::transition_system(state_type, initial_state_formula, transition_formula);
-  cmd::command* define_system = new cmd::define_transition_system("system", aiger_system);
+  std::string id = "system";
+  system::transition_system* aiger_system = new system::transition_system(id, state_type, initial_state_formula, transition_formula);
+  cmd::command* define_system = new cmd::define_transition_system(id, aiger_system);
   all_commands->push_back(define_system);
   
   // Get the properties

@@ -257,8 +257,9 @@ cmd::command* btor_state::finalize() const {
   system::transition_formula* transition_formula = new system::transition_formula(tm(), state_type, transition);
 
   // Define the transition system
-  system::transition_system* transition_system = new system::transition_system(state_type, init_formula, transition_formula);
-  cmd::command* transition_system_define = new cmd::define_transition_system("T", transition_system);
+  std::string id = "T";
+  system::transition_system* transition_system = new system::transition_system(id, state_type, init_formula, transition_formula);
+  cmd::command* transition_system_define = new cmd::define_transition_system(id, transition_system);
 
   // Query
   std::vector<term_ref> bad_children;
