@@ -67,6 +67,7 @@ system_command returns [cmd::command* cmd = 0]
   | c = define_transition_system { $cmd = c; }
   | c = assume                   { $cmd = c; }                    
   | c = query                    { $cmd = c; }
+  | c = lemma                    { $cmd = c; }
   | EOF { $cmd = 0; }
   ;
   
