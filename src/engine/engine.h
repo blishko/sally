@@ -87,6 +87,9 @@ public:
   virtual
   invariant get_invariant() = 0;
 
+  virtual
+  void add_reachability_lemma(size_t level, expr::term_ref lemma) {}
+
 };
 
 std::ostream& operator << (std::ostream& out, engine::result result);

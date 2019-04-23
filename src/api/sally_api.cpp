@@ -9,6 +9,7 @@
 #include <engine/factory.h>
 #include <smt/factory.h>
 #include <parser/parser.h>
+#include <parser/antlr_parser.h>
 #include "parse_options.h"
 #include <engine/pdkind/pdkind_engine.h>
 #include <iostream>
@@ -106,12 +107,20 @@ void run_on_mcmt_string(std::string const & content, sally_context ctx) {
 }
 
 std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term_ref) {
+//  auto &context = ctx->context;
+//  auto& term = context->tm().term_of(term_ref);
+//  std::stringstream ss;
+//  ss << expr::set_tm(context->tm());
+//  ss << term;
+//  return ss.str();
+  return ctx->term_manager->to_string(term_ref);
+}
+
+void add_reachability_lemma(sally_context ctx, std::string const &lemma_str) {
   auto &context = ctx->context;
-  auto& term = context->tm().term_of(term_ref);
-  std::stringstream ss;
-  ss << expr::set_tm(context->tm());
-  ss << term;
-  return ss.str();
+  parser::parser p(*context, parser::INPUT_MCMT, lemma_str);
+  cmd::command* c = p.parse_command();
+  c->run(&(*ctx->context), &(*ctx->engine));
 }
 
 void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh) {
@@ -124,6 +133,12 @@ void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
   auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
   engine->add_next_frame_eh(state, eh);
+}
+
+std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref &lemma_ref) {
+  std::string lemma_str = ctx->term_manager->to_string(lemma_ref);
+  std::string command = "( lemma " + std::to_string(level) + ' ' + lemma_str + " )";
+  return command;
 }
 
 }

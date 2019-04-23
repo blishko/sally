@@ -146,6 +146,10 @@ reachability::result reachability::check_reachable(size_t k, expr::term_ref f, s
       expr::term_ref learnt = d_smt->learn_forward(reach.frame(), reach.formula());
       // Add any unreachability learnts
       if (!frame_contains(reach.frame(), learnt)) {
+        // Run hooks
+        for (size_t i = 0; i < callbacks.size(); ++i) {
+          callbacks[i].lemma_learnt(k,f);
+        }
         if (d_ctx.get_options().get_bool("pdkind-add-backward")) {
           add_valid_up_to(reach.frame(), learnt);
         } else {
@@ -213,10 +217,6 @@ void reachability::add_to_frame(size_t k, expr::term_ref f) {
   d_smt->add_to_reachability_solver(k, f);
   // Remember
   d_frame_content[k].insert(f);
-  // Run hooks
-  for (size_t i = 0; i < callbacks.size(); ++i) {
-    callbacks[i].lemma_learnt(k,f);
-  }
 }
 
 void reachability::init(const system::transition_system* transition_system, solvers* smt_solvers) {

@@ -30,6 +30,8 @@ options {
   #include "command/define_states.h"
   #include "command/define_transition.h"
   #include "command/define_transition_system.h"
+
+  #include "command/frame_lemma.h"
   #include "command/query.h"
   #include "command/sequence.h" 
   #include "parser/mcmt/mcmt_state.h"
@@ -177,7 +179,22 @@ query returns [cmd::command* cmd = 0]
     	$cmd = new cmd::query(STATE->ctx(), id, f);
     }
     ')'
-  ; 
+  ;
+
+/** Reachability lemma */
+lemma returns [cmd::command* cmd = 0]
+@declarations {
+  size_t val;
+}
+  : '(' 'lemma'
+    NUMERAL {
+      val = (size_t)std::stoi(STATE->token_text($NUMERAL));
+    }
+    f = term {
+      $cmd = new cmd::frame_lemma(val, f, STATE->tm());
+    }
+    ')'
+;
 
 /** Parse a constant definition */
 define_constant 

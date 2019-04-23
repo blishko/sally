@@ -569,5 +569,9 @@ engine::invariant pdkind_engine::get_invariant() {
   return d_invariant;
 }
 
+void pdkind_engine::add_reachability_lemma(size_t level, expr::term_ref lemma) {
+  d_reachability.add_to_frame(level, lemma);
+}
+
 }
 }

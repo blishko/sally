@@ -43,6 +43,10 @@ void add_next_frame_eh(sally_context ctx, sally_general_eh, void*);
 
 std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 
+void add_reachability_lemma(sally_context ctx, std::string const &lemma_str);
+
+std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref& lemma_ref);
+
 }
 
 #endif //SALLY_SALLY_API_H

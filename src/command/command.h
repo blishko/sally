@@ -34,7 +34,8 @@ enum type {
   DEFINE_TRANSITION,
   DEFINE_TRANSITION_SYSTEM,
   ASSUME,
-  QUERY
+  QUERY,
+  FRAME_LEMMA
 };
 
 class command {
