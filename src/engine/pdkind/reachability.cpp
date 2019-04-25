@@ -148,7 +148,7 @@ reachability::result reachability::check_reachable(size_t k, expr::term_ref f, s
       if (!frame_contains(reach.frame(), learnt)) {
         // Run hooks
         for (size_t i = 0; i < callbacks.size(); ++i) {
-          callbacks[i].lemma_learnt(k,f);
+          callbacks[i].lemma_learnt(reach.frame(), learnt);
         }
         if (d_ctx.get_options().get_bool("pdkind-add-backward")) {
           add_valid_up_to(reach.frame(), learnt);
