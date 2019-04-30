@@ -26,5 +26,7 @@ namespace parser {
 
 internal_parser_interface* new_chc_parser(const system::context& ctx, const char* filename);
 
+internal_parser_interface* new_chc_parser(const system::context& ctx, std::string const & content);
+
 }
 }

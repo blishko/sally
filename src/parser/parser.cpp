@@ -111,8 +111,11 @@ parser::parser(const system::context& ctx, input_language lang, std::string cons
     case INPUT_MCMT:
       d_internal = new_mcmt_parser(ctx, content);
       break;
+    case INPUT_CHC:
+      d_internal = new_chc_parser(ctx, content);
+      break;
     default:
-      throw std::logic_error("Not implemented for other types of input than MCMT");
+      throw std::logic_error("Not implemented for other types of input than MCMT or CHC");
       assert(false);
   }
 }

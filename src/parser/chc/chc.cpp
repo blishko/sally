@@ -48,6 +48,9 @@ internal_parser_interface* new_chc_parser(const system::context& ctx, const char
   return new antlr_parser<INPUT_CHC>(ctx, filename);
 }
 
+internal_parser_interface* new_chc_parser(const system::context& ctx, std::string const & content) {
+  return new antlr_parser<INPUT_CHC>(ctx, content);
+}
 
 }
 }
