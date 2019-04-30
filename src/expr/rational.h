@@ -142,6 +142,8 @@ public:
 /** Output operator */
 std::ostream& operator << (std::ostream& out, const rational& q);
 
+expr::rational decimal2rational(std::string decimal);
+
 }
 
 namespace utils {

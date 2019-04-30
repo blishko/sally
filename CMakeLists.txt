@@ -4,7 +4,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 project(sally CXX C)
 enable_testing()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -std=c++11")
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # If ENABLE_COVERAGE is defined, try to set coverage flags.
