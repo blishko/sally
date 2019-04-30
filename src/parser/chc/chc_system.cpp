@@ -332,8 +332,8 @@ cmd::command *chc_system::to_transition_system() {
   assert(st->is_transition_formula(transition_fla));
   system::transition_formula* transition_relation = nullptr;
   transition_relation = new system::transition_formula(tm, st, transition_fla);
-  system::transition_system* system = new system::transition_system(st, init_states, transition_relation);
   std::string system_id = "CHC";
+  system::transition_system* system = new system::transition_system(system_id, st, init_states, transition_relation);
   cmd_seq->push_back(new cmd::define_transition_system(system_id, system));
 //  std::cout << *system;
 
