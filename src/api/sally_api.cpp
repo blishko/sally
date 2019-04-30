@@ -71,10 +71,30 @@ void delete_context(sally_context ctx) {
   delete ctx;
 }
 
+namespace {
+  void run_on_string(std::string const& content, parser::input_language language, sally_context ctx) {
+    try {
+      assert(ctx->context);
+      assert(ctx->engine);
+      auto &context = ctx->context;
+      auto &engine = ctx->engine;
+      // Create the parser
+      parser::parser p(*context, language, content);
+
+      // Parse an process each command
+      for (cmd::command *cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
+        // Run the command
+        cmd->run(context.get(), engine.get());
+      }
+    } catch (sally::exception &ex){
+      throw std::logic_error("Sally exception: " + ex.get_message());
+    }
+  }
+}
+
 void run_on_file(std::string file, sally_context ctx) {
   assert(ctx->context);
   assert(ctx->engine);
-
   auto & context = ctx->context;
   auto & engine = ctx->engine;
   // Create the parser
@@ -89,21 +109,11 @@ void run_on_file(std::string file, sally_context ctx) {
 }
 
 void run_on_mcmt_string(std::string const & content, sally_context ctx) {
-  try {
-    auto &context = ctx->context;
-    auto &engine = ctx->engine;
-    // Create the parser
-    parser::input_language language = parser::INPUT_MCMT;
-    parser::parser p(*context, language, content);
+  run_on_string(content, parser::INPUT_MCMT, ctx);
+}
 
-    // Parse an process each command
-    for (cmd::command *cmd = p.parse_command(); cmd != 0; delete cmd, cmd = p.parse_command()) {
-      // Run the command
-      cmd->run(context.get(), engine.get());
-    }
-  }catch (sally::exception &ex){
-    throw std::logic_error("Sally exception: " + ex.get_message());
-  }
+void run_on_chc_string(std::string const & content, sally_context ctx) {
+  run_on_string(content, parser::INPUT_CHC, ctx);
 }
 
 std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term_ref) {
