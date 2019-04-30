@@ -35,8 +35,10 @@ std::vector<std::string> map_to_cmdline(std::map<std::string, std::string> const
   // add auxiliary first argument -> name of the script
   res.push_back("phony");
   for (const auto & entry : opts) {
+    if (entry.second == "false") { continue; } // flag set to false, do not put it in the command line
     res.push_back("--" + entry.first);
-    res.push_back(entry.second);
+    if (entry.second == " true") { } // flag set to true, only the name of the flag is added to command line
+    else { res.push_back(entry.second); }
   }
   // add auxiliary last argument -> file to run
   res.push_back("phony2");
