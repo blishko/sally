@@ -25,7 +25,7 @@ struct api_context {
   std::unique_ptr<options> opts;
   std::unique_ptr<expr::term_manager> term_manager;
   std::unique_ptr<system::context> context;
-  std::unique_ptr<engine> engine;
+  std::unique_ptr<engine> d_engine;
   std::unique_ptr<boost::program_options::variables_map> boost_options;
 };
 
@@ -64,7 +64,7 @@ sally_context create_context(std::map<std::string, std::string> const & option_m
   assert(ctx->opts->has_option("solver"));
   smt::factory::set_default_solver(ctx->opts->get_string("solver"));
   if (ctx->opts->has_option("engine")) {
-      ctx->engine = std::unique_ptr<engine>(engine_factory::mk_engine(ctx->opts->get_string("engine"), *ctx->context));
+      ctx->d_engine = std::unique_ptr<engine>(engine_factory::mk_engine(ctx->opts->get_string("engine"), *ctx->context));
   }
   return ctx;
 }
@@ -77,9 +77,9 @@ namespace {
   void run_on_string(std::string const& content, parser::input_language language, sally_context ctx) {
     try {
       assert(ctx->context);
-      assert(ctx->engine);
+      assert(ctx->d_engine);
       auto &context = ctx->context;
-      auto &engine = ctx->engine;
+      auto &engine = ctx->d_engine;
       // Create the parser
       parser::parser p(*context, language, content);
 
@@ -96,9 +96,9 @@ namespace {
 
 void run_on_file(std::string file, sally_context ctx) {
   assert(ctx->context);
-  assert(ctx->engine);
+  assert(ctx->d_engine);
   auto & context = ctx->context;
-  auto & engine = ctx->engine;
+  auto & engine = ctx->d_engine;
   // Create the parser
   parser::input_language language = parser::parser::guess_language(file);
   parser::parser p(*context, language, file.c_str());
@@ -132,31 +132,31 @@ void add_reachability_lemma(sally_context ctx, std::string const &lemma_str) {
   auto &context = ctx->context;
   parser::parser p(*context, parser::INPUT_MCMT, lemma_str);
   cmd::command* c = p.parse_command();
-  c->run(&(*ctx->context), &(*ctx->engine));
+  c->run(&(*ctx->context), &(*ctx->d_engine));
 }
 
 void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh) {
-  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
   engine->set_new_reachability_lemma_eh(ctx, lemma_eh);
 }
 
 void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
-  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->engine.get());
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
   engine->add_next_frame_eh(state, eh);
 }
 
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref &lemma_ref) {
   auto tm = ctx->term_manager.get();
-  auto state_type = ctx->engine->get_current_transition_system()->get_state_type();
+  auto state_type = ctx->d_engine->get_current_transition_system()->get_state_type();
   state_type->use_namespace();
   state_type->use_namespace(system::state_type::STATE_CURRENT);
   std::string lemma_str = ctx->term_manager->to_string(lemma_ref);
   tm->pop_namespace();
   tm->pop_namespace();
-  assert(ctx->engine->get_current_transition_system());
-  std::string system_id = ctx->engine->get_current_transition_system()->get_id();
+  assert(ctx->d_engine->get_current_transition_system());
+  std::string system_id = ctx->d_engine->get_current_transition_system()->get_id();
   std::string command = "( lemma " + system_id + ' ' + std::to_string(level) + ' ' + lemma_str + " )";
   return command;
 }
