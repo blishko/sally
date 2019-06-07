@@ -161,5 +161,21 @@ std::string reachability_lemma_to_command(sally_context ctx, size_t level, const
   return command;
 }
 
+std::vector<std::pair<std::string, std::string>> stats::get_stats() const {
+
+  std::vector<std::pair<std::string, std::string>> ret;
+  std::stringstream ss_keys;
+  std::stringstream ss_vals;
+  this->ctx->context->get_statistics().headers_to_stream(ss_keys);
+  this->ctx->context->get_statistics().values_to_stream(ss_vals);
+  std::string key;
+  std::string val;
+  char del = '\t';
+  while (std::getline(ss_keys, key, del)) {
+    std::getline(ss_vals, val, del);
+    ret.emplace_back(key, val);
+  }
+  return ret;
+}
 }
 

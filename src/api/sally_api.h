@@ -49,6 +49,15 @@ void add_reachability_lemma(sally_context ctx, std::string const &lemma_str);
 
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref& lemma_ref);
 
+class stats {
+  sally_context ctx;
+public:
+  stats(sally_context context) : ctx(context) {}
+
+  std::vector<std::pair<std::string, std::string>> get_stats() const;
+
+};
+
 }
 
 #endif //SALLY_SALLY_API_H
