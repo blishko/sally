@@ -44,10 +44,15 @@ sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, 
 //    res = osmt->getConfig().setOption(":dump-query", SMTOption(1), msg);
 //    res = osmt->getConfig().setOption(":dump-query-name", SMTOption("sally"), msg);
 
-    const std::string itp_option = "opensmt2-itp";
-    if (opts.has_option(itp_option)) {
-      ItpAlgorithm itp {opts.get_int(itp_option)};
+    const std::string lra_itp_option = "opensmt2-itp-lra";
+    const std::string bool_itp_option = "opensmt2-itp-bool";
+    if (opts.has_option(lra_itp_option)) {
+      ItpAlgorithm itp {opts.get_int(lra_itp_option)};
       osmt->getConfig().setLRAInterpolationAlgorithm(itp);
+    }
+    if (opts.has_option(bool_itp_option)) {
+      ItpAlgorithm itp {opts.get_int(bool_itp_option)};
+      osmt->getConfig().setBooleanInterpolationAlgorithm(itp);
     }
     if (opts.has_option("opensmt2-random_seed")) {
       osmt->getConfig().setRandomSeed(opts.get_int("opensmt2-random_seed"));

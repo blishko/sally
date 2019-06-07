@@ -32,7 +32,8 @@ struct opensmt2_info {
   static void setup_options(boost::program_options::options_description &options) {
     using namespace boost::program_options;
     options.add_options()
-      ("opensmt2-itp", value<int>(), "Choose interpolation algorithm\n0 - Farkas primal \n2 - Farkas dual \n4 - Decomposed Farkas primal \n5 - Decomposed Farkas dual")
+      ("opensmt2-itp-bool", value<int>(), "Choose boolean interpolation algorithm\n0 - McMillan \n1 - Pudlak \n2 - McMillan dual \n3 - Proof sensitive")
+      ("opensmt2-itp-lra", value<int>(), "Choose LRA interpolation algorithm\n0 - Farkas primal \n2 - Farkas dual \n4 - Decomposed Farkas primal \n5 - Decomposed Farkas dual")
       ("opensmt2-random_seed", value<int>(), "Set random seed")
       ("opensmt2-simplify_itp", value<int>(), "Set level of post-processing of interpolants");
   }
