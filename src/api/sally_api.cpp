@@ -161,6 +161,12 @@ std::string reachability_lemma_to_command(sally_context ctx, size_t level, const
   return command;
 }
 
+void set_obligation_pushed_eh(sally_context ctx, sally_obligation_pushed_eh eh) {
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
+  if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
+  engine->set_obligation_pushed_eh(ctx, eh);
+}
+
 std::vector<std::pair<std::string, std::string>> stats::get_stats() const {
 
   std::vector<std::pair<std::string, std::string>> ret;

@@ -268,6 +268,9 @@ void pdkind_engine::push_current_frame() {
       break;
     case INDUCTION_SUCCESS:
       // Boss, we're done with this one
+      if (this->induction_lemma_eh) {
+        induction_lemma_eh->call(ind.d, ind.F_fwd, ind.F_cex);
+      }
       break;
     case INDUCTION_FAIL:
       // Failure, we didn't push, either counter-example found, or we couldn't push

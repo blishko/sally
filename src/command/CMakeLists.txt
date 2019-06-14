@@ -6,6 +6,7 @@ add_library(command
   define_transition.cpp
   define_transition_system.cpp
   frame_lemma.cpp
+  induction_lemma.cpp
   query.cpp
   sequence.cpp
 )

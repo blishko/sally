@@ -222,6 +222,8 @@ class pdkind_engine : public engine {
 
 public:
 
+  typedef void (*obligation_pushed_eh_t)(void *, size_t, const sally::expr::term_ref&, const sally::expr::term_ref&);
+
   pdkind_engine(const system::context& ctx);
   ~pdkind_engine();
 
@@ -241,12 +243,18 @@ public:
 
   void add_reachability_lemma(size_t level, expr::term_ref lemma);
 
+  void add_induction_lemma(size_t level, expr::term_ref lemma, expr::term_ref cex);
+
   void set_new_reachability_lemma_eh(void* ctx, reachability::lemma_eh_t eh) {
     this->d_reachability.set_reachability_lemma(ctx, eh);
   }
 
   void add_next_frame_eh(void* ctx, general_eh_t eh) {
     this->next_frame_ehs.push_back(general_callback(ctx, eh));
+  }
+
+  void set_obligation_pushed_eh(void* ctx, obligation_pushed_eh_t eh) {
+    this->induction_lemma_eh = std::unique_ptr<induction_lemma_callback>(new induction_lemma_callback(ctx, eh));
   }
 
   struct general_callback {
@@ -263,8 +271,28 @@ public:
     general_eh_t callback;
   };
 
+  struct induction_lemma_callback {
+    induction_lemma_callback(void* ctx, obligation_pushed_eh_t callback):
+    ctx(ctx),
+    callback(callback)
+    {}
+
+    void call(size_t level, expr::term_ref lemma, expr::term_ref cex) {
+      this->callback(this->ctx, level, lemma, cex);
+    }
+
+  private:
+    void* ctx;
+    obligation_pushed_eh_t callback;
+  };
+
+
+
 private:
   std::vector<general_callback> next_frame_ehs;
+  std::unique_ptr<induction_lemma_callback> induction_lemma_eh;
+
+
 
 };
 

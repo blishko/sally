@@ -23,11 +23,15 @@ class term_ref;
 }
 class options;
 class engine;
+
 // END OF FORWARD DECLARATIONS
 
 typedef struct api_context* sally_context;
 typedef void (*sally_new_lemma_eh)(void *, size_t, const sally::expr::term_ref&);
 typedef void (*sally_general_eh)(void *);
+typedef void (*sally_obligation_pushed_eh)(void *, size_t, const sally::expr::term_ref&, const sally::expr::term_ref&);
+
+
 
 sally_context create_context(std::map<std::string, std::string> const & options );
 
@@ -48,6 +52,8 @@ std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 void add_reachability_lemma(sally_context ctx, std::string const &lemma_str);
 
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref& lemma_ref);
+
+void set_obligation_pushed_eh(sally_context ctx,sally_obligation_pushed_eh);
 
 class stats {
   sally_context ctx;

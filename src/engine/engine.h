@@ -91,6 +91,9 @@ public:
   void add_reachability_lemma(size_t level, expr::term_ref lemma) {}
 
   virtual
+  void add_induction_lemma(size_t level, expr::term_ref lemma, expr::term_ref cex) {}
+
+  virtual
   const system::transition_system* get_current_transition_system() const { return 0; }
 
 };
