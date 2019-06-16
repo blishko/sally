@@ -32,6 +32,7 @@ options {
   #include "command/define_transition_system.h"
 
   #include "command/frame_lemma.h"
+  #include "command/induction_lemma.h"
   #include "command/query.h"
   #include "command/sequence.h" 
   #include "parser/mcmt/mcmt_state.h"
@@ -68,6 +69,7 @@ system_command returns [cmd::command* cmd = 0]
   | c = assume                   { $cmd = c; }                    
   | c = query                    { $cmd = c; }
   | c = lemma                    { $cmd = c; }
+  | c = ilemma                   { $cmd = c; }
   | EOF { $cmd = 0; }
   ;
   
@@ -198,6 +200,30 @@ lemma returns [cmd::command* cmd = 0]
     }
     f = state_formula[state_type] {
       $cmd = new cmd::frame_lemma(val, f->get_formula(), STATE->tm());
+    }
+    ')'
+;
+
+/** Induction lemma */
+ilemma returns [cmd::command* cmd = 0]
+@declarations {
+size_t val;
+size_t depth;
+std::string id;
+const system::state_type* state_type;
+}
+  : '(' 'ilemma'
+    symbol[id, parser::MCMT_TRANSITION_SYSTEM, true] {
+    state_type = STATE->ctx().get_transition_system(id)->get_state_type();
+    }
+    a = NUMERAL {
+    val = (size_t)std::stoi(STATE->token_text($a));
+    }
+    f = state_formula[state_type]
+    cex = state_formula[state_type]
+    b = NUMERAL {
+      depth = (size_t)std::stoi(STATE->token_text($b));
+      $cmd = new cmd::induction_lemma(val, f->get_formula(), cex->get_formula(), depth, STATE->tm());
     }
     ')'
 ;

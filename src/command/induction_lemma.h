@@ -1,9 +1,9 @@
 //
-// Created by Martin Blicha on 2019-04-20.
+// Created by Martin Blicha on 2019-06-14.
 //
 
-#ifndef SALLY_FRAME_LEMMA_H
-#define SALLY_FRAME_LEMMA_H
+#ifndef SALLY_INDUCTION_LEMMA_H
+#define SALLY_INDUCTION_LEMMA_H
 
 #include "command.h"
 
@@ -15,9 +15,10 @@ class induction_lemma : public command {
   size_t level;
   expr::term_ref lemma;
   expr::term_ref cex;
+  size_t cex_depth;
   const expr::term_manager& tm;
 public:
-  induction_lemma(size_t level, expr::term_ref lemma, expr::term_ref cex, const expr::term_manager& tm);
+  induction_lemma(size_t level, expr::term_ref lemma, expr::term_ref cex, size_t cex_depth, const expr::term_manager& tm);
 
   ~induction_lemma() {}
 
@@ -28,4 +29,4 @@ public:
 };
 }}
 
-#endif //SALLY_FRAME_LEMMA_H
+#endif //SALLY_INDUCTION_LEMMA_H
