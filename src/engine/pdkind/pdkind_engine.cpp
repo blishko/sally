@@ -269,7 +269,8 @@ void pdkind_engine::push_current_frame() {
     case INDUCTION_SUCCESS:
       // Boss, we're done with this one
       if (this->induction_lemma_eh) {
-        induction_lemma_eh->call(ind.d, ind.F_fwd, ind.F_cex);
+        // It has been pushed at level current_frame_index, meaning it is valid at least at level current_frame_index + 1
+        induction_lemma_eh->call(d_induction_frame_index + 1, ind.F_fwd, ind.F_cex, ind.d);
       }
       break;
     case INDUCTION_FAIL:
@@ -292,6 +293,7 @@ engine::result pdkind_engine::search() {
     d_induction_frame_next_index = d_induction_frame_index + d_induction_frame_depth;
 
     MSG(1) << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
+//    std::cerr << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
 
     // Push the current induction frame forward
     push_current_frame();
@@ -337,11 +339,6 @@ engine::result pdkind_engine::search() {
       d_smt->minimize_frame(d_induction_obligations_next);
     }
 
-    // Call hooks
-    for (size_t i = 0; i < next_frame_ehs.size(); ++i) {
-      next_frame_ehs[i].call();
-    }
-
     // Add formulas to the new frame
     d_induction_frame.clear();
     std::vector<induction_obligation>::const_iterator next_it = d_induction_obligations_next.begin();
@@ -367,6 +364,11 @@ engine::result pdkind_engine::search() {
 
     // Do garbage collection
     d_smt->gc();
+
+    // Call hooks
+    for (size_t i = 0; i < next_frame_ehs.size(); ++i) {
+      next_frame_ehs[i].call();
+    }
   }
 
   // Didn't prove or disprove, so unknown
@@ -573,7 +575,35 @@ engine::invariant pdkind_engine::get_invariant() {
 }
 
 void pdkind_engine::add_reachability_lemma(size_t level, expr::term_ref lemma) {
-  d_reachability.add_to_frame(level, lemma);
+  d_reachability.add_to_frame_if_not_present(level, lemma);
+}
+
+void pdkind_engine::add_induction_lemma(size_t level, sally::expr::term_ref lemma, sally::expr::term_ref cex, size_t cex_depth) {
+//  std::cerr << expr::set_tm(this->tm());
+  if (level < this->d_induction_frame_index) {
+    // This information is no longer of an interest to us, we are at a frame further from the initial state.
+//    std::cerr << "Ignoring induction lemma ";
+//    lemma.to_stream(std::cerr);
+//    std::cerr << std::endl;
+    return;
+  }
+  if (level >= this->d_induction_frame_index) {
+//    std::cerr << "Adding induction lemma ";
+//    lemma.to_stream(std::cerr);
+//    std::cerr << std::endl;
+    // we know lemma has been successfully pushed, we can use it
+    induction_obligation ind = induction_obligation(tm(), lemma, cex, cex_depth, 1);
+    auto res = this->d_induction_frame.insert(ind);
+    if (res.second) {
+      d_smt->add_to_induction_solver(lemma, solvers::INDUCTION_FIRST);
+      d_smt->add_to_induction_solver(lemma, solvers::INDUCTION_INTERMEDIATE);
+      induction_obligation_queue::handle_type h = d_induction_obligations.push(ind);
+      d_induction_obligations_handles[ind] = h;
+    }
+    else{
+//      std::cerr << "Lemma already in the frame, the size has not increased!" << std::endl;
+    }
+  }
 }
 
 }
