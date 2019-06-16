@@ -90,6 +90,8 @@ namespace {
       }
     } catch (sally::exception &ex){
       throw std::logic_error("Sally exception: " + ex.get_message());
+    } catch (sally::parser::parser_exception & ex) {
+      throw std::logic_error("Sally parser exception: " + ex.get_message());
     }
   }
 }
@@ -128,7 +130,7 @@ std::string term_to_string(sally_context ctx, sally::expr::term_ref const & term
   return ctx->term_manager->to_string(term_ref);
 }
 
-void add_reachability_lemma(sally_context ctx, std::string const &lemma_str) {
+void add_lemma(sally_context ctx, std::string const &lemma_str) {
   auto &context = ctx->context;
   parser::parser p(*context, parser::INPUT_MCMT, lemma_str);
   cmd::command* c = p.parse_command();
@@ -158,6 +160,24 @@ std::string reachability_lemma_to_command(sally_context ctx, size_t level, const
   assert(ctx->d_engine->get_current_transition_system());
   std::string system_id = ctx->d_engine->get_current_transition_system()->get_id();
   std::string command = "( lemma " + system_id + ' ' + std::to_string(level) + ' ' + lemma_str + " )";
+  return command;
+}
+
+std::string induction_lemma_to_command(sally_context ctx, size_t level,
+  const sally::expr::term_ref &lemma_ref, const sally::expr::term_ref &cex_ref, size_t cex_depth) {
+
+  auto tm = ctx->term_manager.get();
+  auto state_type = ctx->d_engine->get_current_transition_system()->get_state_type();
+  state_type->use_namespace();
+  state_type->use_namespace(system::state_type::STATE_CURRENT);
+  std::string lemma_str = ctx->term_manager->to_string(lemma_ref);
+  std::string cex_str = ctx->term_manager->to_string(cex_ref);
+  tm->pop_namespace();
+  tm->pop_namespace();
+  assert(ctx->d_engine->get_current_transition_system());
+  std::string system_id = ctx->d_engine->get_current_transition_system()->get_id();
+  std::string command = "( ilemma " + system_id + ' ' + std::to_string(level) + ' ' + lemma_str
+    + ' ' + cex_str + ' ' + std::to_string(cex_depth) + " )";
   return command;
 }
 

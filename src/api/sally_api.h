@@ -29,7 +29,8 @@ class engine;
 typedef struct api_context* sally_context;
 typedef void (*sally_new_lemma_eh)(void *, size_t, const sally::expr::term_ref&);
 typedef void (*sally_general_eh)(void *);
-typedef void (*sally_obligation_pushed_eh)(void *, size_t, const sally::expr::term_ref&, const sally::expr::term_ref&);
+typedef void (*sally_obligation_pushed_eh)(void *, size_t, const sally::expr::term_ref&,
+  const sally::expr::term_ref&, size_t);
 
 
 
@@ -49,9 +50,12 @@ void add_next_frame_eh(sally_context ctx, sally_general_eh, void*);
 
 std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 
-void add_reachability_lemma(sally_context ctx, std::string const &lemma_str);
+void add_lemma(sally_context ctx, std::string const &lemma_str);
 
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref& lemma_ref);
+
+std::string induction_lemma_to_command(sally_context ctx, size_t level,
+  const sally::expr::term_ref& lemma_ref, const sally::expr::term_ref& ex_ref, size_t cex_depth);
 
 void set_obligation_pushed_eh(sally_context ctx,sally_obligation_pushed_eh);
 
