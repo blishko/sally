@@ -107,6 +107,8 @@ public:
    */
   void add_to_frame(size_t k, expr::term_ref F);
 
+  void add_to_frame_if_not_present(size_t k, expr::term_ref F);
+
   /**
    * Add to frames 1..k.
    */

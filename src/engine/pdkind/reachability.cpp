@@ -219,6 +219,12 @@ void reachability::add_to_frame(size_t k, expr::term_ref f) {
   d_frame_content[k].insert(f);
 }
 
+void reachability::add_to_frame_if_not_present(size_t k, expr::term_ref f) {
+  if (d_frame_content[k].find(f) == d_frame_content[k].end()) {
+    add_to_frame(k,f);
+  }
+}
+
 void reachability::init(const system::transition_system* transition_system, solvers* smt_solvers) {
   d_transition_system = transition_system;
   d_smt = smt_solvers;
