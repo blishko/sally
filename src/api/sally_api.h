@@ -44,7 +44,9 @@ void run_on_mcmt_string(std::string const & content, sally_context ctx);
 
 void run_on_chc_string(std::string const & content, sally_context ctx);
 
-void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh);
+void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh, void*);
+
+void set_obligation_pushed_eh(sally_context ctx, sally_obligation_pushed_eh, void*);
 
 void add_next_frame_eh(sally_context ctx, sally_general_eh, void*);
 
@@ -57,7 +59,7 @@ std::string reachability_lemma_to_command(sally_context ctx, size_t level, const
 std::string induction_lemma_to_command(sally_context ctx, size_t level,
   const sally::expr::term_ref& lemma_ref, const sally::expr::term_ref& ex_ref, size_t cex_depth);
 
-void set_obligation_pushed_eh(sally_context ctx,sally_obligation_pushed_eh);
+
 
 class stats {
   sally_context ctx;

@@ -90,8 +90,6 @@ namespace {
       }
     } catch (sally::exception &ex){
       throw std::logic_error("Sally exception: " + ex.get_message());
-    } catch (sally::parser::parser_exception & ex) {
-      throw std::logic_error("Sally parser exception: " + ex.get_message());
     }
   }
 }
@@ -137,10 +135,16 @@ void add_lemma(sally_context ctx, std::string const &lemma_str) {
   c->run(&(*ctx->context), &(*ctx->d_engine));
 }
 
-void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh) {
+void set_new_reachability_lemma_eh(sally_context ctx, sally_new_lemma_eh lemma_eh, void* state) {
   auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
   if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
-  engine->set_new_reachability_lemma_eh(ctx, lemma_eh);
+  engine->set_new_reachability_lemma_eh(state, lemma_eh);
+}
+
+void set_obligation_pushed_eh(sally_context ctx, sally_obligation_pushed_eh eh, void* state) {
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
+  if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
+  engine->set_obligation_pushed_eh(state, eh);
 }
 
 void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
@@ -179,12 +183,6 @@ std::string induction_lemma_to_command(sally_context ctx, size_t level,
   std::string command = "( ilemma " + system_id + ' ' + std::to_string(level) + ' ' + lemma_str
     + ' ' + cex_str + ' ' + std::to_string(cex_depth) + " )";
   return command;
-}
-
-void set_obligation_pushed_eh(sally_context ctx, sally_obligation_pushed_eh eh) {
-  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
-  if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
-  engine->set_obligation_pushed_eh(ctx, eh);
 }
 
 std::vector<std::pair<std::string, std::string>> stats::get_stats() const {
