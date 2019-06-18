@@ -172,7 +172,10 @@ pdkind_engine::induction_result pdkind_engine::push_obligation(induction_obligat
     // Add to counter-example to induction frame
     induction_obligation new_ind(tm(), F_fwd, F_cex, d_induction_frame_depth + ind.d, 1);
     assert(d_induction_frame.find(new_ind) == d_induction_frame.end());
-    d_induction_frame.insert(new_ind);
+    auto ins_res = d_induction_frame.insert(new_ind);
+    if (!ins_res.second) {
+        throw exception("Refinement failed to insert already present lemma, invariant broken!\n");
+    }
     d_stats.frame_size->get_value() = d_induction_frame.size();
     d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_FIRST);
     d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_INTERMEDIATE);
@@ -221,13 +224,19 @@ pdkind_engine::induction_result pdkind_engine::push_obligation(induction_obligat
     // Therefore !CEX is k-inductive modulo current assumptions and we can just push it
     induction_obligation new_ind(tm(), F_cex_not, ind.F_cex, ind.d, ind.d);
     assert(d_induction_frame.find(new_ind) == d_induction_frame.end());
-    d_induction_frame.insert(new_ind);
-    d_stats.frame_size->get_value() = d_induction_frame.size();
-    // No need to assert anything, we already have F_fwd => !F_cex
-    // Also, just add to next
-    d_induction_obligations_next.push_back(new_ind);
-    d_stats.frame_pushed->get_value() = d_induction_obligations_next.size();
-
+    auto ins_res = d_induction_frame.insert(new_ind);
+    if (ins_res.second) {
+      // Actually managed to insert
+      d_stats.frame_size->get_value() = d_induction_frame.size();
+      // No need to assert anything, we already have F_fwd => !F_cex
+      // Also, just add to next
+      d_induction_obligations_next.push_back(new_ind);
+      d_stats.frame_pushed->get_value() = d_induction_obligations_next.size();
+    }
+    else {
+      // Lemma and cex already present, we can ignore this refinement
+//      throw exception("Refinement failed to insert already present lemma, invariant broken!\n");
+    }
     // Current obligation has failed, we know it will become invalid
     return INDUCTION_FAIL;
   }
