@@ -279,7 +279,7 @@ void pdkind_engine::push_current_frame() {
       break;
     case INDUCTION_SUCCESS:
       // Boss, we're done with this one
-      if (this->induction_lemma_eh) {
+      if (this->induction_lemma_eh && ind.score >= 1) {
         // It has been pushed at level current_frame_index, meaning it is valid at least at level current_frame_index + 1
         induction_lemma_eh->call(d_induction_frame_index + 1, ind.F_fwd, ind.F_cex, ind.d);
       }
