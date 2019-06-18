@@ -173,13 +173,15 @@ pdkind_engine::induction_result pdkind_engine::push_obligation(induction_obligat
     induction_obligation new_ind(tm(), F_fwd, F_cex, d_induction_frame_depth + ind.d, 1);
     assert(d_induction_frame.find(new_ind) == d_induction_frame.end());
     auto ins_res = d_induction_frame.insert(new_ind);
-    if (!ins_res.second) {
-        throw exception("Refinement failed to insert already present lemma, invariant broken!\n");
+    if (ins_res.second) {
+      d_stats.frame_size->get_value() = d_induction_frame.size();
+      d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_FIRST);
+      d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_INTERMEDIATE);
+      enqueue_induction_obligation(new_ind);
     }
-    d_stats.frame_size->get_value() = d_induction_frame.size();
-    d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_FIRST);
-    d_smt->add_to_induction_solver(F_fwd, solvers::INDUCTION_INTERMEDIATE);
-    enqueue_induction_obligation(new_ind);
+    else {
+//      throw exception("Refinement failed to insert already present lemma, invariant broken!\n");
+    }
 
     // Remember the counter-example
     d_cex_manager.add_edge(F_cex, ind.F_cex, d_induction_frame_depth, 0);
