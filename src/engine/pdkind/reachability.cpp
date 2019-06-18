@@ -220,6 +220,7 @@ void reachability::add_to_frame(size_t k, expr::term_ref f) {
 }
 
 void reachability::add_to_frame_if_not_present(size_t k, expr::term_ref f) {
+  ensure_frame(k);
   if (d_frame_content[k].find(f) == d_frame_content[k].end()) {
     add_to_frame(k,f);
   }
