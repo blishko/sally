@@ -23,8 +23,8 @@ namespace pdkind {
 
 bool induction_obligation_cmp_better::operator() (const induction_obligation& ind1, const induction_obligation& ind2) const {
   // Prefer sahllow ones
-  if (ind1.d*ind2.score != ind2.d*ind1.score) {
-    return ind1.d*ind2.score < ind2.d*ind1.score;
+  if ((ind1.d+1)*ind2.score != (ind2.d+1)*ind1.score) {
+    return (ind1.d+1)*ind2.score < (ind2.d+1)*ind1.score;
   }
   // Prefer higher scores
   if (ind1.score != ind2.score) {
