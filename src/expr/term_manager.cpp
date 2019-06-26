@@ -80,6 +80,8 @@ term_ref term_manager::mk_term(term_op op, const std::vector<term_ref>& children
     result = mk_term(op, children[0], children[1]);
   } else if (children.size() == 1 && (op == term_op::TERM_AND || op == term_op::TERM_OR)) {
     result = children[0];
+  } else if (children.size() == 1 && op == term_op::TERM_SUB && term_of(children[0]).op() == term_op::CONST_RATIONAL) {
+    result = mk_rational_constant(get_rational_constant(term_of(children[0])).negate());
   } else {
     result = d_tm->mk_term(op, children.begin(), children.end());
   }
