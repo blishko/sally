@@ -289,6 +289,10 @@ void pdkind_engine::push_current_frame() {
       // and decided not to try again
       break;
     }
+    // Call hooks
+    for (size_t i = 0; i < next_obligation_ehs.size(); ++i) {
+      next_obligation_ehs[i].call();
+    }
   }
 }
 
@@ -304,7 +308,7 @@ engine::result pdkind_engine::search() {
     d_induction_frame_next_index = d_induction_frame_index + d_induction_frame_depth;
 
     MSG(1) << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
-//    std::cerr << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
+//    std::cerr << reinterpret_cast<uint64_t>(this) << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
 
     // Push the current induction frame forward
     push_current_frame();
@@ -599,9 +603,7 @@ void pdkind_engine::add_induction_lemma(size_t level, sally::expr::term_ref lemm
     return;
   }
   if (level >= this->d_induction_frame_index) {
-//    std::cerr << "Adding induction lemma ";
-//    lemma.to_stream(std::cerr);
-//    std::cerr << std::endl;
+//    std::cerr << "Adding induction lemma at level" << d_induction_frame_index << " " << tm().to_string(lemma) << " " << reinterpret_cast<uint64_t>(this) << std::endl;
     // we know lemma has been successfully pushed, we can use it
     induction_obligation ind = induction_obligation(tm(), lemma, cex, cex_depth, 1);
     auto res = this->d_induction_frame.insert(ind);

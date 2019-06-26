@@ -153,6 +153,12 @@ void add_next_frame_eh(sally_context ctx, sally_general_eh eh, void* state) {
   engine->add_next_frame_eh(state, eh);
 }
 
+void add_next_obligation_eh(sally_context ctx, sally_general_eh eh, void* state) {
+  auto* engine = dynamic_cast<pdkind::pdkind_engine*>(ctx->d_engine.get());
+  if (!engine) { std::cerr << "Error setting hook!" << std::endl; return; }
+  engine->add_next_obligation_eh(state, eh);
+}
+
 std::string reachability_lemma_to_command(sally_context ctx, size_t level, const sally::expr::term_ref &lemma_ref) {
   auto tm = ctx->term_manager.get();
   auto state_type = ctx->d_engine->get_current_transition_system()->get_state_type();

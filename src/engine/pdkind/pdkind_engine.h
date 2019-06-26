@@ -254,6 +254,10 @@ public:
     this->next_frame_ehs.push_back(general_callback(ctx, eh));
   }
 
+  void add_next_obligation_eh(void* ctx, general_eh_t eh) {
+    this->next_obligation_ehs.push_back(general_callback(ctx, eh));
+  }
+
   void set_obligation_pushed_eh(void* ctx, obligation_pushed_eh_t eh) {
     this->induction_lemma_eh = std::unique_ptr<induction_lemma_callback>(new induction_lemma_callback(ctx, eh));
   }
@@ -291,6 +295,7 @@ public:
 
 private:
   std::vector<general_callback> next_frame_ehs;
+  std::vector<general_callback> next_obligation_ehs;
   std::unique_ptr<induction_lemma_callback> induction_lemma_eh;
 
 

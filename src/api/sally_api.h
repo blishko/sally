@@ -50,6 +50,8 @@ void set_obligation_pushed_eh(sally_context ctx, sally_obligation_pushed_eh, voi
 
 void add_next_frame_eh(sally_context ctx, sally_general_eh, void*);
 
+void add_next_obligation_eh(sally_context ctx, sally_general_eh eh, void* state);
+
 std::string term_to_string(sally_context ctx, const sally::expr::term_ref& );
 
 void add_lemma(sally_context ctx, std::string const &lemma_str);
