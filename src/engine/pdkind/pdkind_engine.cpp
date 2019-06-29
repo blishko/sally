@@ -308,7 +308,7 @@ engine::result pdkind_engine::search() {
     d_induction_frame_next_index = d_induction_frame_index + d_induction_frame_depth;
 
     MSG(1) << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
-//    std::cerr << reinterpret_cast<uint64_t>(this) << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
+//    std::cerr << reinterpret_cast<uint64_t>(this) << ' ' << "pdkind: working on induction frame " << d_induction_frame_index << " (" << d_induction_frame.size() << ") with induction depth " << d_induction_frame_depth << std::endl;
 
     // Push the current induction frame forward
     push_current_frame();
@@ -594,28 +594,52 @@ void pdkind_engine::add_reachability_lemma(size_t level, expr::term_ref lemma) {
 }
 
 void pdkind_engine::add_induction_lemma(size_t level, sally::expr::term_ref lemma, sally::expr::term_ref cex, size_t cex_depth) {
-//  std::cerr << expr::set_tm(this->tm());
-  if (level < this->d_induction_frame_index) {
-    // This information is no longer of an interest to us, we are at a frame further from the initial state.
-//    std::cerr << "Ignoring induction lemma ";
-//    lemma.to_stream(std::cerr);
+//  auto id = reinterpret_cast<uint64_t>(this);
+  // see if it we have it already
+  induction_frame_type::iterator it = std::find_if(d_induction_frame.begin(), d_induction_frame.end(), [lemma](induction_obligation const & other) {
+    return other.F_fwd == lemma;
+  });
+
+  if (it != d_induction_frame.end()) {
+    // lemma already in the frame
+//    std::cerr << id << ' ' << "External inductive lemma already in my inductive frame!" << tm().to_string(lemma);
+//    MB: This could lead to incorrect information about the CEX trace, let's just not do that
+//    if (it->F_cex != cex) {
+//      // add information about another cex being blocked by this lemma
+////      std::cerr << ' ' << "But at least cex has been updated!";
+//      induction_obligation updated = *it;
+//      updated.F_cex = tm().mk_or(updated.F_cex, cex);
+//      // TODO: how to update the depth to CEX?
+//      d_induction_frame.erase(it);
+//      auto res = d_induction_frame.insert(updated);
+//      assert(res.second); (void)(res);
+//    }
 //    std::cerr << std::endl;
+    // We are done, the the frame has not changed
     return;
   }
-  if (level >= this->d_induction_frame_index) {
-//    std::cerr << "Adding induction lemma at level" << d_induction_frame_index << " " << tm().to_string(lemma) << " " << reinterpret_cast<uint64_t>(this) << std::endl;
-    // we know lemma has been successfully pushed, we can use it
-    induction_obligation ind = induction_obligation(tm(), lemma, cex, cex_depth, 1);
-    auto res = this->d_induction_frame.insert(ind);
-    if (res.second) {
+  // We do not have the lemma in the frame, see if we can use it
+  // Check if it is inductive relative to what we have
+  auto res = d_smt->check_inductive_if_added(lemma);
+  switch (res) {
+    case smt::solver::UNSAT:
+      // inductive! use it
+      // add it to the current, next frame and induction solver
+    {
+//      std::cerr << id << ' ' << "External lemma successfully incorporated " << tm().to_string(lemma) << std::endl;
+      induction_obligation ind = induction_obligation(tm(), lemma, cex, cex_depth, 1);
+      auto inserted = this->d_induction_frame.insert(ind);
+      if (!inserted.second) { throw exception("This should not happen"); }
+      d_induction_obligations_next.push_back(ind);
       d_smt->add_to_induction_solver(lemma, solvers::INDUCTION_FIRST);
       d_smt->add_to_induction_solver(lemma, solvers::INDUCTION_INTERMEDIATE);
-      induction_obligation_queue::handle_type h = d_induction_obligations.push(ind);
-      d_induction_obligations_handles[ind] = h;
+      break;
     }
-    else{
-//      std::cerr << "Lemma already in the frame, the size has not increased!" << std::endl;
-    }
+    case smt::solver::SAT:
+    case smt::solver::UNKNOWN:
+      // not inductive -> ignore
+//      std::cerr << id << ' ' << "Throwing away external lemma " << tm().to_string(lemma) << std::endl;
+      return;
   }
 }
 

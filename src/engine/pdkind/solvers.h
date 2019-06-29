@@ -193,6 +193,8 @@ public:
    */
   query_result check_inductive_model(expr::model::ref m, expr::term_ref f);
 
+  smt::solver::result check_inductive_if_added(expr::term_ref f);
+
   /** Learn forward to refute G at k from k-1 and initial state using reachability solvers */
   expr::term_ref learn_forward(size_t k, expr::term_ref G);
 

@@ -701,6 +701,32 @@ solvers::query_result solvers::check_inductive_model(expr::model::ref m, expr::t
   return result;
 }
 
+smt::solver::result solvers::check_inductive_if_added(expr::term_ref f) {
+
+  assert(d_induction_solver != 0);
+  assert(d_induction_generalizer != 0);
+
+  query_result result;
+
+  // Push the scope
+  smt::solver_scope scope(d_induction_solver);
+  scope.push();
+
+  // Add the original formula
+  d_induction_solver->add(f, smt::solver::CLASS_A);
+  for (size_t k = 1; k < d_induction_solver_depth; ++ k) {
+    d_induction_solver->add(d_trace->get_state_formula(f, k), smt::solver::CLASS_T);
+  }
+
+  // Add the formula (moving current -> next)
+  expr::term_ref F_not = d_tm.mk_term(expr::TERM_NOT, f);
+  expr::term_ref F_not_next = d_trace->get_state_formula(F_not, d_induction_solver_depth);
+  d_induction_solver->add(F_not_next, smt::solver::CLASS_B);
+
+  // Figure out the result
+  return d_induction_solver->check();
+}
+
 void solvers::new_reachability_frame() {
   // Increase the size
   d_size ++;
