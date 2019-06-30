@@ -30,11 +30,14 @@ bool induction_obligation_cmp_better::operator() (const induction_obligation& in
   if (ind1.score != ind2.score) {
     return ind1.score > ind2.score;
   }
+
+  // random split
+  return &ind1 < &ind2;
   // Otherwise just break ties, basically term id's => created earlier wins
-  if (ind1.F_cex != ind2.F_cex) {
-    return ind1.F_cex < ind2.F_cex;
-  }
-  return ind1.F_fwd < ind2.F_fwd;
+//  if (ind1.F_cex != ind2.F_cex) {
+//    return ind1.F_cex < ind2.F_cex;
+//  }
+//  return ind1.F_fwd < ind2.F_fwd;
 }
 
 induction_obligation::induction_obligation(expr::term_manager& tm, expr::term_ref F_fwd, expr::term_ref F_cex, size_t d, double score, size_t refined)
