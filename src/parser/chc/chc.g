@@ -51,6 +51,7 @@ chc_command
   | chc_declare_fun
   | chc_assert
   | '(' 'check-sat' ')'
+  | '(' EXIT ')'
   ;
 
 chc_declare_fun
@@ -310,7 +311,7 @@ type returns [expr::term_ref type]
 
 /** exit (skip for now) */
 EXIT
-  : '(' 'exit' ')' { SKIP(); }
+  : 'exit'
   ;
 
 /** Comments (skip) */
