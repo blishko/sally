@@ -36,12 +36,14 @@ namespace parser {
 void chc_system::add_rule(term_ref head, term_ref tail) {
 
   // All the head variables should be distinct
-  auto additional_equalities = ensure_distinct(head);
+  auto additional_equalities = ensure_all_distinct_vars(head);
 
   // Normalize head
   auto subst = normalize_head(head);
   // Normalize tail
-  tail = ctx.tm().mk_and(tail, ctx.tm().mk_and(additional_equalities));
+  if (!additional_equalities.empty()) {
+    tail = ctx.tm().mk_and(tail, ctx.tm().mk_and(additional_equalities));
+  }
   normalize_tail(tail, subst);
 
   d_rules[head].push_back(tail);
@@ -149,7 +151,7 @@ chc_system::term_vec chc_system::get_arguments(expr::term_ref head) const {
   return args;
 }
 
-chc_system::term_vec chc_system::ensure_distinct(expr::term_ref& head) {
+chc_system::term_vec chc_system::ensure_all_distinct_vars(expr::term_ref &head) {
   chc_system::term_vec additional_equalities;
   substituition sub;
   std::set<term_ref> seen;
@@ -157,7 +159,16 @@ chc_system::term_vec chc_system::ensure_distinct(expr::term_ref& head) {
   auto args = get_arguments(head);
   auto new_args = args;
   for (size_t i = 0; i < args.size(); ++i) {
-    term_ref var = args[i];
+    term_ref arg = args[i];
+    if(tm.term_of(arg).op() != VARIABLE) {
+//      std::cerr << "PROBLEM " << tm.to_string(arg) << std::endl;
+      term_ref type = tm.term_of(tm.term_of(get_predicate(head))[0])[i];
+      auto new_var = get_fresh_variable_of_type(type);
+      new_args[i] = new_var;
+      additional_equalities.push_back(tm.mk_term(TERM_EQ, arg, new_var));
+      continue;
+    }
+    term_ref var = arg;
     auto it = seen.find(var);
     if (it == seen.end()) {
       seen.insert(var);
@@ -234,7 +245,7 @@ cmd::command *chc_system::to_transition_system() {
   // get the input variables of transition
   auto p_term = extract_predicate_from_tail(transition_fla, predicate);
   {
-    auto body_equalities = ensure_distinct(p_term);
+    auto body_equalities = ensure_all_distinct_vars(p_term);
     transition_fla = tm.mk_and(transition_fla, tm.mk_and(body_equalities));
   }
   auto trans_input_vars = get_arguments(p_term);

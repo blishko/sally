@@ -87,13 +87,14 @@ chc_assert
 
 chc_implication returns [std::pair<expr::term_ref, expr::term_ref> impl]
   : '(' '=>' tail = term head = term ')' { impl.first = head; impl.second = tail; }
+  | head = chc_predicate { impl.first = head; impl.second = STATE->tm().mk_boolean_constant(true); }
   | '(' 'let'
        { STATE->push_scope(); } 
        let_assignments
        let_impl = chc_implication { impl = let_impl; }
        { STATE->pop_scope(); }
     ')' 
-  |  ;
+  ;
 
 chc_assert_variable returns [expr::term_ref t = expr::term_ref()]
 @declarations{
@@ -136,12 +137,21 @@ term returns [expr::term_ref t = expr::term_ref()]
       expr::bitvector_extract extract(hi_value.get_unsigned(), lo_value.get_unsigned());
       t = STATE->tm().mk_bitvector_extract(s, extract);
     }
-  | '(' symbol[id, parser::CHC_PREDICATE, true] { f = STATE->get_function(id); }
-        ( f_arg = term { children.push_back(f_arg); } )+         
-    ')'   
-    { t = STATE->tm().mk_function_application(f, children); }
+  | head = chc_predicate { t = head; }
   ; 
-  
+
+chc_predicate returns [expr::term_ref t = expr::term_ref()]
+@declarations {
+  std::string id;
+  std::vector<expr::term_ref> children;
+  expr::term_ref f;
+}
+  : '(' symbol[id, parser::CHC_PREDICATE, true] { f = STATE->get_function(id); }
+    ( f_arg = term { children.push_back(f_arg); } )+
+    ')'
+    { t = STATE->tm().mk_function_application(f, children); }
+  ;
+
 let_assignments 
   : '(' let_assignment+ ')'
   ; 

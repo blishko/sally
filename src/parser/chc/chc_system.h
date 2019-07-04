@@ -79,7 +79,7 @@ private:
 
   term_vec remove_predicate_and_extract_vars(expr::term_ref& tail, expr::term_ref predicate) const;
 
-  term_vec ensure_distinct(expr::term_ref& head);
+  term_vec ensure_all_distinct_vars(expr::term_ref &head);
 
   expr::term_ref get_fresh_variable_of_type(expr::term_ref type);
 
