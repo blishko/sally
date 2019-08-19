@@ -595,6 +595,13 @@ void pdkind_engine::add_reachability_lemma(size_t level, expr::term_ref lemma) {
 
 void pdkind_engine::add_induction_lemma(size_t level, sally::expr::term_ref lemma, sally::expr::term_ref cex, size_t cex_depth) {
 //  auto id = reinterpret_cast<uint64_t>(this);
+
+  // we assume "lemma" is valid UP TO "level"
+  if (level < this->d_induction_frame_index) {
+    // ignore lemma if do not know if it is valid up to our level
+//    std::cerr << "Ignoring eternal induction lemma as it might not be valid up to our current level!\n";
+    return;
+  }
   // see if it we have it already
   induction_frame_type::iterator it = std::find_if(d_induction_frame.begin(), d_induction_frame.end(), [lemma](induction_obligation const & other) {
     return other.F_fwd == lemma;
@@ -603,17 +610,6 @@ void pdkind_engine::add_induction_lemma(size_t level, sally::expr::term_ref lemm
   if (it != d_induction_frame.end()) {
     // lemma already in the frame
 //    std::cerr << id << ' ' << "External inductive lemma already in my inductive frame!" << tm().to_string(lemma);
-//    MB: This could lead to incorrect information about the CEX trace, let's just not do that
-//    if (it->F_cex != cex) {
-//      // add information about another cex being blocked by this lemma
-////      std::cerr << ' ' << "But at least cex has been updated!";
-//      induction_obligation updated = *it;
-//      updated.F_cex = tm().mk_or(updated.F_cex, cex);
-//      // TODO: how to update the depth to CEX?
-//      d_induction_frame.erase(it);
-//      auto res = d_induction_frame.insert(updated);
-//      assert(res.second); (void)(res);
-//    }
 //    std::cerr << std::endl;
     // We are done, the the frame has not changed
     return;
