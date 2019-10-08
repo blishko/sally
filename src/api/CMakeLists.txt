@@ -42,7 +42,7 @@ if (OPENSMT2_FOUND)
 endif()
 
 target_link_libraries(api ${Boost_LIBRARIES} ${GMP_LIBRARY})
-target_link_libraries(api libantlr3c)
+target_link_libraries(api libantlr3c_shared)
 
 install(TARGETS api
         LIBRARY
