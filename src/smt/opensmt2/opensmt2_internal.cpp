@@ -30,7 +30,8 @@ sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, 
 , d_instance(s_instance_id++)
 , d_term_cache()
 {
-  d_stacked_A_partitions.emplace_back();
+  d_stacked_AT_flas.emplace_back();
+  d_stacked_B_flas.emplace_back();
 
   if (opts.has_option("solver-logic")) {
     auto logic_str = opts.get_string("solver-logic");
@@ -71,45 +72,56 @@ void sally::smt::opensmt2_internal::add(sally::expr::term_ref ref, sally::smt::s
   TRACE("opensmt2") << "add: " << ref << std::endl;
   TRACE("opensmt2") << "class = " << f_class << std::endl;
 
-  PTRef ptref = sally_to_osmt(ref);
-    char** msg = nullptr;
+//  PTRef ptref = sally_to_osmt(ref);
+//    char** msg = nullptr;
 
-    get_main_solver().insertFormula(ptref, msg);
+//    get_main_solver().insertFormula(ptref, msg);
 //    std::cout << "Assigning partition " << current_partition << " to fla:\n" << get_logic().printTerm(ptref) << '\n';
     // A and T formula for A-part of interpolation problem; B formula form B-part
     if(f_class == sally::smt::solver::CLASS_A || f_class == sally::smt::solver::CLASS_T) {
-      d_stacked_A_partitions[d_stack_level].push_back(d_current_partition);
+      d_stacked_AT_flas[d_stack_level].push_back(ref);
     }
-    ++d_current_partition;
-
+    else {
+      assert(f_class == sally::smt::solver::CLASS_B);
+      d_stacked_B_flas[d_stack_level].push_back(ref);
+    }
 }
 
 sally::smt::solver::result sally::smt::opensmt2_internal::check() {
-    auto res = get_main_solver().check();
+  PTRef partitionA = sally_to_osmt(d_tm.mk_and(d_stacked_AT_flas[d_stack_level]));
+  PTRef partitionB = sally_to_osmt(d_tm.mk_and(d_stacked_B_flas[d_stack_level]));
+  char** msg = nullptr;
+  get_main_solver().insertFormula(partitionA, msg);
+  get_main_solver().insertFormula(partitionB, msg);
+  auto res = get_main_solver().check();
 //    std::cout << "Solver " << instance() << " got result: " << [res](){
 //      if(res == s_True) return "SAT";
 //      if(res == s_False) return "UNSAT";
 //      return "UNKNOWN";
 //    }() << '\n';
-    if (res == s_True) { return solver::SAT; }
-    if (res == s_False) { return solver::UNSAT; }
-    return solver::UNKNOWN;
+  if (res == s_True) { return solver::SAT; }
+  if (res == s_False) { return solver::UNSAT; }
+  return solver::UNKNOWN;
 }
 
 void sally::smt::opensmt2_internal::push() {
-    get_main_solver().push();
-    ++d_stack_level;
-    d_stacked_A_partitions.emplace_back();
+  assert(false); // MB: incrementality with interpolation not supported at the moment
+  get_main_solver().push();
+  ++d_stack_level;
+  d_stacked_AT_flas.emplace_back();
+  d_stacked_B_flas.emplace_back();
 }
 
 void sally::smt::opensmt2_internal::pop() {
+  assert(false); // MB: incrementality with interpolation not supported at the moment
   bool res = get_main_solver().pop();
   (void) res;
   assert(res);
-  assert(d_stacked_A_partitions.size() == d_stack_level + 1); // we start at level 0
+  assert(d_stacked_AT_flas.size() == d_stack_level + 1); // we start at level 0
   --d_stack_level;
   assert(d_stack_level == 0); // TODO interpolation with incremental solving may not work properly
-  d_stacked_A_partitions.pop_back();
+  d_stacked_AT_flas.pop_back();
+  d_stacked_B_flas.pop_back();
 }
 
 PTRef sally::smt::opensmt2_internal::sally_to_osmt(sally::expr::term_ref ref) {
@@ -395,11 +407,9 @@ void sally::smt::opensmt2_internal::interpolate(vector<sally::expr::term_ref> &o
 
 ipartitions_t sally::smt::opensmt2_internal::get_A_mask() const {
   ipartitions_t A_mask = 0;
-  for (auto const & stack_level_partitions : d_stacked_A_partitions) {
-    for (auto const & partition_idx : stack_level_partitions){
-      setbit(A_mask, partition_idx);
-    }
-  }
+
+  setbit(A_mask, 0);
+
   return A_mask;
 }
 

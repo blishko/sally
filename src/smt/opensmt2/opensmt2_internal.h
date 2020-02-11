@@ -86,9 +86,10 @@ private:
 
     unsigned int d_stack_level = 0;
 
-    std::vector<std::vector<unsigned int>> d_stacked_A_partitions;
+    std::vector<std::vector<sally::expr::term_ref>> d_stacked_AT_flas;
+    std::vector<std::vector<sally::expr::term_ref>> d_stacked_B_flas;
 
-    unsigned int d_current_partition = 0;
+//    unsigned int d_current_partition = 0;
 
     ipartitions_t get_A_mask() const;
 };
