@@ -19,6 +19,7 @@
 #pragma once
 
 #include "system/context.h"
+#include "parser/parser.h"
 #include "parser/antlr_parser.h"
 
 namespace sally {

@@ -5,6 +5,11 @@ foreach(DIR ${sally_SRC_DIRS})
   add_subdirectory(${DIR})
 endforeach(DIR)
 
+if (DREAL_FOUND)
+  # It must be added before add_executable
+  link_directories(${DREAL_LIBRARY_DIRS})
+endif()
+
 # Add the executable
 add_executable(sally sally.cpp parse_options.cpp)
 if (SALLY_STATIC_BUILD)
@@ -37,12 +42,10 @@ if (Z3_FOUND)
   target_link_libraries(sally ${Z3_LIBRARY})
 endif()
 if (OPENSMT2_FOUND)
-  set_property(TARGET sally PROPERTY CXX_STANDARD 11)
-  set_property(TARGET smt PROPERTY CXX_STANDARD 11)
-  set_property(TARGET sally PROPERTY CXX_STANDARD_REQUIRED ON)
-  set_property(TARGET smt PROPERTY CXX_STANDARD_REQUIRED ON)
-  target_link_libraries(sally ${OPENSMT2_LIB})
-  target_compile_definitions(smt PUBLIC -DPRODUCE_PROOF)
+  target_link_libraries(sally ${OPENSMT2_LIBRARY})
+endif()
+if (DREAL_FOUND)
+  target_link_libraries(sally ${DREAL_LIBRARIES})
 endif()
 
 target_link_libraries(sally ${Boost_LIBRARIES} ${GMP_LIBRARY})
@@ -63,6 +66,25 @@ foreach(FILE ${regressions})
   string(REGEX REPLACE "(\r?\n)+$" "" ALL_OPTIONS "${ALL_OPTIONS}")
   # Turn the options into a list 
   separate_arguments(ALL_OPTIONS)
+
+  # Don't run tests that require a solver not supported 
+  list (FIND ALL_OPTIONS "dreal" FIND_INDEX)
+  if ((NOT DREAL_FOUND) AND (FIND_INDEX GREATER -1))
+    continue()
+  endif()
+
+  # Don't run tests that require a solver not supported 
+  list (FIND ALL_OPTIONS "d4y2" FIND_INDEX)
+  if (((NOT DREAL_FOUND) OR (NOT YICES2_FOUND)) AND (FIND_INDEX GREATER -1))
+    continue()
+  endif()
+
+  # Don't run tests that require a solver not supported 
+  list (FIND ALL_OPTIONS "y2o2" FIND_INDEX)
+  if (((NOT OPENSMT2_FOUND) OR (NOT YICES2_FOUND)) AND (FIND_INDEX GREATER -1))
+    continue()
+  endif()
+
   # Add the test with the options and the file
   add_test(${FILE} sally ${ALL_OPTIONS} ${FILE})
   

@@ -57,14 +57,14 @@ if (LIBPOLY_FOUND)
 endif()
 
 # Find Yices if LibPoly is there
-#if (LIBPOLY_FOUND)
+if (LIBPOLY_FOUND)
   SET(YICES2_HOME CACHE STRING "Yices2 installation directory")
   find_package(Yices2 2.6.0)
   if (YICES2_FOUND)
     add_definitions(-DWITH_YICES2)
     include_directories(${YICES2_INCLUDE_DIR}) 
   endif()
-  #endif()
+endif()
 
 # Find MathSAT5
 SET(MATHSAT5_HOME CACHE STRING "MathSAT5 installation directory")
@@ -74,26 +74,31 @@ if (MATHSAT5_FOUND)
   include_directories(${MATHSAT5_INCLUDE_DIR})
 endif()
 
-# Find Z3
-#SET(Z3_HOME CACHE STRING "Z3 installation directory")
-#find_package(Z3 4.4.1)
-#if (Z3_FOUND)
-#  add_definitions(-DWITH_Z3)
-#  include_directories(${Z3_INCLUDE_DIR})
-#endif()
+# Find DREAL
+SET(DREAL_HOME CACHE STRING "DReal installation directory")
+find_package(Dreal)
+if (DREAL_FOUND)
+  add_definitions(-DWITH_DREAL)
+  #add_definitions(${DREAL_DEFINITIONS})
+  include_directories(${DREAL_INCLUDE_DIRS})
+  #message(STATUS "Dreal definitions: ${DREAL_DEFINITIONS}")
+endif()
 
-#Find Opensmt2
-#TODO: ugly way until opensmt exports cmake package
-find_library(OPENSMT2_LIB NAMES opensmt2 libopensm2)
-if(OPENSMT2_LIB)
- find_path(OPENSMT2_INCLUDE opensmt/opensmt2.h)
- if(OPENSMT2_INCLUDE)
-     message("Opensmt found!")
-     set(OPENSMT2_FOUND TRUE)
-     add_definitions(-DWITH_OPENSMT2)
-     include_directories(${OPENSMT2_INCLUDE})
- endif(OPENSMT2_INCLUDE)
-endif(OPENSMT2_LIB)
+# Find Z3
+SET(Z3_HOME CACHE STRING "Z3 installation directory")
+find_package(Z3 4.8)
+if (Z3_FOUND)
+  add_definitions(-DWITH_Z3)
+  include_directories(${Z3_INCLUDE_DIR})
+endif()
+
+# Find OpenSMT2
+SET(OPENSMT2_HOME CACHE STRING "OpenSMT2 installation directory")
+find_package(OpenSMT2)
+if (OPENSMT2_FOUND)
+  add_definitions(-DWITH_OPENSMT2)
+  include_directories(${OPENSMT2_INCLUDE_DIR})
+endif()
 
 # Make sure antlr C runtime is here
 include(ExternalProject) 

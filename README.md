@@ -6,9 +6,7 @@
 
 Sally is a model checker for infinite state systems described as transition 
 systems. It is research software under development so the features and the 
-input language may change rapidly.   
-
-The project is supported by NASA contract NNX14AI05A.
+input language may change rapidly.
 
 ## Prerequisites
 
@@ -20,20 +18,28 @@ sudo apt-get install libgmp-dev
 sudo apt-get install libboost-program-options-dev libboost-iostreams-dev libboost-test-dev libboost-thread-dev libboost-system-dev
 sudo apt-get install default-jre
 ```
-In addition, Sally needs an SMT solver for reasoning about the systems. It currently supports [Yices2](http://yices.csl.sri.com/) and [MathSAT5](http://mathsat.fbk.eu/). For best results we recommend using both Yices2 and MathSAT5. 
+In addition, Sally needs an SMT solver for reasoning about the systems. It currently supports
+[Yices2](http://yices.csl.sri.com/), [MathSAT5](http://mathsat.fbk.eu/), and [OpenSMT2](http://verify.inf.usi.ch/opensmt2).
+Optionally, Sally can also use [dReal](https://github.com/dreal/dreal4).
+
+For best results, we recommend using Yices2 and at least one of
+MathSAT5 or OpenSMT2 (or both).
 
 ## How to Compile
 
-If you have Yices2 installed in the $YD directory, meaning that there are 
-$YD/include and $YD/lib directories with Yices2 headers and libraries, then
-configure and build with 
+You can configure and build Sally with:
 ```bash
 cd build
-cmake .. -DYICES2_HOME=$YD
+cmake ..
 make
 make check
 ```
-If you have MathSAT5 installed in the $MD directory, meaning that there are 
+The ``cmake`` command will search for the necessary libraries and for the backend
+SMT solvers installed on your system.
+
+If a solver is installed in a non-standard
+location, and ``cmake`` does not find it, you can give extra options. For example,
+if MathSAT5 is installed in the $MD directory, meaning that there are 
 $MD/include and $MD/lib directories with MathSAT5 headers and libraries, then 
 configure and build with
 ```bash
@@ -42,8 +48,10 @@ cmake .. -DMATHSAT5_HOME=$MD
 make
 make check
 ```
+You can also set YICES2_HOME, OPENSMT2_HOME, or DREAL_HOME.
 
-To compile sally in debug mode then configure and build with
+
+To compile Sally in debug mode, build with
 ```bash
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
@@ -51,19 +59,21 @@ make
 make check
 ```
 
-In order to use the non-linear capabilities of Yices2 in Sally, the 
-version of Yices2 used mused be compiled with MCSAT enabled, and LibPoly 
-must be available. Similar to above, you can pass `-DLIBPOLY_HOME=$LPD` 
-to cmake if LibPoly is installed in a non-standard location. 
+In order to use the non-linear capabilities of Yices2 in Sally, you
+must use a version of Yices2 compiled with MCSAT support, and
+[LibPoly](https://github.com/SRI-CSL/libpoly) must be
+installed on your system. As above, you can pass `-DLIBPOLY_HOME=$LPD` to
+cmake if LibPoly is installed in a non-standard location.
 
-### Input Language
+
+## Input Language
 
 Sally takes as input a simple description of transition systems based on the 
 SMT2 language. A transition system consists of a description of the state type, 
 a formula describing the initial states of the system, and a formula describing 
 the transitions from the current to the next state of the system.
 
-#### State Types
+### State Types
 
 State type is a list of variables that are part of the state, together with
 their types.
@@ -87,7 +97,7 @@ Above, the variable ``d`` is such an input. These input variables can only be re
 With a defined state type, we can define sets of states and transitions over the
 state type.
 
-#### State Formulas
+### State Formulas
 
 We can describe a set of states with a state formula over the state type. A 
 state formula is a first-order formula over the variables of the state type, 
@@ -110,7 +120,7 @@ over the same state type.
 )
 ```   
 
-#### State Transitions
+### State Transitions
 
 We can describe allowed state transitions by a first-order formula over the 
 current (state) and next variables of the state type. We use the prefix
@@ -140,7 +150,7 @@ previously defined transitions over the same type can be used directly.
 )
 ```
 
-#### Transition Systems
+### Transition Systems
 
 We can define a state transition system by defining the state type, the initial
 states of the system and the transitions that the system can make.
@@ -171,7 +181,7 @@ states of the system and the transitions that the system can make.
 )
 ```
 
-#### Queries
+### Queries
 
 A query asks whether a state property is invariant for the given transition 
 system (i.e., whether the state property is true in all reachable states). 
@@ -204,7 +214,7 @@ In the system ``T3``, the variables ``x`` and ``y`` should always be equal.
 
 The full example above is available in ``examples/example.mcmt``.
     
-### Usage 
+## Usage 
 
 To see the full set of options, run ``sally -h``. Some typical examples are as 
 follows
@@ -310,6 +320,7 @@ valid
 valid
 ```
 
-
+## Acknowledgments
   
+Sally's development has been funded by the National Science Foundation, the National Aeronautics and Space Administration, and the Defense Advanced Research Projects Agency.
 

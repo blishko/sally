@@ -218,6 +218,12 @@ mathsat5_internal::mathsat5_internal(expr::term_manager& tm, const options& opts
   msat_set_option(d_cfg, "theory.euf.enabled", "false");
   msat_set_option(d_cfg, "preprocessor.simplification", "0");
 
+  if (opts.has_option("mathsat5-la-interpolation-mode")) {
+    int res = msat_set_option(d_cfg, "theory.la.interpolation_mode",
+      std::to_string(opts.get_int("mathsat5-la-interpolation-mode")).c_str());
+    if (res != 0 ) { throw exception("Error in setting MathSAT5 interpolation option"); }
+  }
+
   if (opts.get_bool("mathsat5-unsat-cores")) {
     msat_set_option(d_cfg, "unsat_core_generation", "1");
   }

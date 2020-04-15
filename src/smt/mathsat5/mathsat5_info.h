@@ -36,6 +36,10 @@ struct mathsat5_info {
         ("mathsat5-unsat-cores", "Enable generation of unsat cores")
         ("mathsat5-generalize-trivial", "Trivial generalization by substitution")
         ("mathsat5-generalize-qe", "Generalize through quantifier elimination")
+        ("mathsat5-la-interpolation-mode", value<int>(),"Interpolation mode for Linear Arithmetic:\n"
+                                          "- 0 : single summaries from A\n"
+                                          "- 1 : multiple summaries from A\n"
+                                          "- 2 : single negated summaries from B.")
         ;
   }
 

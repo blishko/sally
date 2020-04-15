@@ -30,7 +30,8 @@
 #include "smt/y2z3/y2z3_info.h"
 #include "smt/y2o2/y2o2_info.h"
 #include "smt/generic/generic_solver_info.h"
-
+#include "smt/dreal/dreal_info.h"
+#include "smt/d4y2/d4y2_info.h"
 
 sally::smt::solver_data::solver_data() {
 #ifdef WITH_YICES2
@@ -59,6 +60,14 @@ sally::smt::solver_data::solver_data() {
 #endif // WITH_YICES2
 #endif // WITH_OPENSMT2
   add_module_info<generic_solver_info>();
+#ifdef WITH_DREAL
+  add_module_info<dreal_info>();
+#endif   
+#ifdef WITH_YICES2
+#ifdef WITH_DREAL
+  add_module_info<d4y2_info>();
+#endif
+#endif
 }
 
 std::string sally::smt::factory::get_default_solver_id() {
@@ -69,6 +78,8 @@ std::string sally::smt::factory::get_default_solver_id() {
     s_default_solver = z3_info::get_id();
 #elif defined WITH_MATHSAT5
     s_default_solver = mathsat5_info::get_id();
+#elif defined WITH_DREAL
+    s_default_solver = dreal_info::get_id();
 #else
     s_default_solver = generic_solver_info::get_id();
 #endif
