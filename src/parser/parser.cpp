@@ -20,7 +20,7 @@
 #include "antlr_parser.h"
 
 #include "mcmt/mcmt.h"
-#include "smt2/smt2.h"
+#include "chc/chc.h"
 #include "btor/btor.h"
 #include "sal/sal.h"
 #include "aiger/aiger.h"
@@ -91,9 +91,6 @@ parser::parser(const system::context& ctx, input_language lang, const char* file
   case INPUT_MCMT:
     d_internal = new_mcmt_parser(ctx, filename);
     break;
-  case INPUT_SMT2:
-    d_internal = new_smt2_parser(ctx, filename);
-    break;
   case INPUT_BTOR:
     d_internal = new_btor_parser(ctx, filename);
     break;
@@ -154,9 +151,6 @@ input_language parser::guess_language(std::string filename) {
     std::string extension = filename.substr(index + 1);
     if (extension == "btor") {
       return INPUT_BTOR;
-    }
-    if (extension == "smt2") {
-      return INPUT_SMT2;
     }
     if (extension == "sal") {
       return INPUT_SAL;
