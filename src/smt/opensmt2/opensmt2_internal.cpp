@@ -26,10 +26,7 @@ namespace{
 unsigned int sally::smt::opensmt2_internal::s_instance_id = 0;
 
 sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, const sally::options &opts)
-: d_tm(tm)
-, d_instance(s_instance_id++)
-, d_term_cache()
-{
+  : d_tm(tm), d_instance(s_instance_id++), d_term_cache() {
   d_stacked_A_partitions.emplace_back();
 
   if (opts.has_option("solver-logic")) {
@@ -51,21 +48,24 @@ sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, 
 //    res = osmt->getConfig().setOption(":dump-query", SMTOption(1), msg);
 //    res = osmt->getConfig().setOption(":dump-query-name", SMTOption("sally"), msg);
 
-    const std::string lra_itp_option = "opensmt2-itp-lra";
-    const std::string bool_itp_option = "opensmt2-itp-bool";
-    if (opts.has_option(lra_itp_option)) {
-      ItpAlgorithm itp {opts.get_int(lra_itp_option)};
-      osmt->getConfig().setLRAInterpolationAlgorithm(itp);
-    }
-    if (opts.has_option(bool_itp_option)) {
-      ItpAlgorithm itp {opts.get_int(bool_itp_option)};
-      osmt->getConfig().setBooleanInterpolationAlgorithm(itp);
-    }
-    if (opts.has_option("opensmt2-random_seed")) {
-      osmt->getConfig().setRandomSeed(opts.get_int("opensmt2-random_seed"));
-    }
-    if (opts.has_option("opensmt2-simplify_itp")) {
-      osmt->getConfig().simplify_interpolant = opts.get_int("opensmt2-simplify_itp");
+      const std::string lra_itp_option = "opensmt2-itp-lra";
+      const std::string bool_itp_option = "opensmt2-itp-bool";
+      if (opts.has_option(lra_itp_option)) {
+        ItpAlgorithm itp{opts.get_int(lra_itp_option)};
+        d_osmt->getConfig().setLRAInterpolationAlgorithm(itp);
+      }
+      if (opts.has_option(bool_itp_option)) {
+        ItpAlgorithm itp{opts.get_int(bool_itp_option)};
+        d_osmt->getConfig().setBooleanInterpolationAlgorithm(itp);
+      }
+      if (opts.has_option("opensmt2-random_seed")) {
+        d_osmt->getConfig().setRandomSeed(opts.get_int("opensmt2-random_seed"));
+      }
+      if (opts.has_option("opensmt2-simplify_itp")) {
+        d_osmt->getConfig().simplify_interpolant = opts.get_int("opensmt2-simplify_itp");
+      }
+    } else {
+      throw sally::exception("OpenSMT currently supports only logic QF_LRA");
     }
   } else {
     throw sally::exception("OpenSMT currently supports only logic QF_LRA, set with --solver-logic QF_LRA.");
