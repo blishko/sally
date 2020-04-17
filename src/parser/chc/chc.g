@@ -47,7 +47,7 @@ command returns [cmd::command* cmd = 0]
 
 chc_command
   : '(' 'set-logic' 'HORN' ')'
-  | '(' 'set-info' ':status' ('sat' | 'unsat') ')'
+  | '(' SETINFO ')'
   | chc_declare_fun
   | chc_assert
   | '(' 'check-sat' ')'
@@ -307,6 +307,10 @@ type returns [expr::term_ref type]
     }
   | // Bool
     'Bool' { type = STATE->get_type("Bool"); }
+  ;
+
+SETINFO
+  : 'set-info' (~(')'))* { SKIP(); }
   ;
 
 /** exit (skip for now) */
