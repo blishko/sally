@@ -37,7 +37,7 @@ if (OPENSMT2_FOUND)
     set_property(TARGET smt PROPERTY CXX_STANDARD 11)
     set_property(TARGET api PROPERTY CXX_STANDARD_REQUIRED ON)
     set_property(TARGET smt PROPERTY CXX_STANDARD_REQUIRED ON)
-    target_link_libraries(api  ${OPENSMT2_LIB})
+    target_link_libraries(api  ${OPENSMT2_LIBRARY})
     target_compile_definitions(smt PUBLIC -DPRODUCE_PROOF)
 endif()
 
