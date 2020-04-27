@@ -165,6 +165,7 @@ PTRef sally::smt::opensmt2_internal::sally_to_osmt(sally::expr::term_ref ref) {
         case expr::TERM_LT:
         case expr::TERM_GEQ:
         case expr::TERM_GT:
+        case expr::TERM_TO_REAL:
         {
             size_t size = t.size();
             assert(size > 0);
@@ -235,6 +236,9 @@ PTRef sally::smt::opensmt2_internal::mk_osmt_term(sally::expr::term_op op, size_
         case expr::TERM_GT:
             assert(n == 2);
             return get_lralogic().mkNumGt(children[0], children[1]);
+      case expr::TERM_TO_REAL:
+            assert(n == 1);
+            return children[0];
         default:
             assert(false);
     }

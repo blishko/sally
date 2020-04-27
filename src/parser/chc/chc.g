@@ -247,6 +247,7 @@ term_op returns [expr::term_op op = expr::OP_LAST]
   | '>='             { op = expr::TERM_GEQ; }
   | '<'              { op = expr::TERM_LT; }
   | '<='             { op = expr::TERM_LEQ; }
+  | 'to_real'        { op = expr::TERM_TO_REAL; }
     // Bitvectors
   | 'bvadd' { op = expr::TERM_BV_ADD; }
   | 'bvsub' { op = expr::TERM_BV_SUB; }
