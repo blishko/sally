@@ -21,6 +21,7 @@ namespace{
     std::string rational_to_string(sally::expr::rational const & r){
       return r.mpq().get_str();
     }
+
 }
 
 unsigned int sally::smt::opensmt2_internal::s_instance_id = 0;
@@ -74,15 +75,16 @@ void sally::smt::opensmt2_internal::add(sally::expr::term_ref ref, sally::smt::s
   TRACE("opensmt2") << "class = " << f_class << std::endl;
 
   PTRef ptref = sally_to_osmt(ref);
-    char** msg = nullptr;
+  char **msg = nullptr;
 
-    get_main_solver().insertFormula(ptref, msg);
-//    std::cout << "Assigning partition " << current_partition << " to fla:\n" << get_logic().printTerm(ptref) << '\n';
-    // A and T formula for A-part of interpolation problem; B formula form B-part
-    if(f_class == sally::smt::solver::CLASS_A || f_class == sally::smt::solver::CLASS_T) {
-      d_stacked_A_partitions[d_stack_level].push_back(d_current_partition);
-    }
-    ++d_current_partition;
+  get_main_solver().insertFormula(ptref, msg);
+  // std::cout << "Assigning partition " << current_partition << " to fla:\n" << get_logic().printTerm(ptref) << '\n';
+  // A and T formula for A-part of interpolation problem; B formula form B-part
+  if (f_class == sally::smt::solver::CLASS_A || f_class == sally::smt::solver::CLASS_T) {
+    d_stacked_A_partitions[d_stack_level].push_back(d_current_partition);
+  }
+  ++d_current_partition;
+  d_stacked_assertions.add_assertion(expr::term_ref_strong(d_tm, ref), f_class);
 
 }
 
@@ -102,6 +104,8 @@ void sally::smt::opensmt2_internal::push() {
     get_main_solver().push();
     ++d_stack_level;
     d_stacked_A_partitions.emplace_back();
+    d_stacked_assertions.push();
+
 }
 
 void sally::smt::opensmt2_internal::pop() {
@@ -111,6 +115,7 @@ void sally::smt::opensmt2_internal::pop() {
   assert(d_stacked_A_partitions.size() == d_stack_level + 1); // we start at level 0
   --d_stack_level;
   d_stacked_A_partitions.pop_back();
+  d_stacked_assertions.pop();
 }
 
 PTRef sally::smt::opensmt2_internal::sally_to_osmt(sally::expr::term_ref ref) {
@@ -331,40 +336,13 @@ sally::expr::model::ref sally::smt::opensmt2_internal::get_model() {
     // Create new model
     expr::model::ref m = new expr::model(d_tm, false);
 
-    // Get the model from mathsat
+    // Get the model from osmt
+    auto model = this->get_main_solver().getModel();
     for (size_t i = 0; i < d_variables.size(); ++ i) {
         expr::term_ref var = d_variables[i];
-        expr::term_ref var_type = d_tm.type_of(var);
-        expr::value var_value;
-
         PTRef m_var = sally_to_osmt(var);
-        const char* val = get_main_solver().getValue(m_var).val;
-
-        switch (d_tm.term_of(var_type).op()) {
-            case expr::TYPE_BOOL: {
-              assert(strcmp(val, "true") == 0 || strcmp(val, "false") == 0);
-              var_value = expr::value(strcmp(val, "true") == 0);
-                break;
-            }
-            case expr::TYPE_INTEGER: {
-                throw "Not implemented yet";
-                break;
-            }
-            case expr::TYPE_REAL: {
-                mpq_t value;
-                mpq_init(value);
-                mpq_set_str(value, val, 10);
-                var_value = expr::value(expr::rational(value));
-                mpq_clear(value);
-                break;
-            }
-            case expr::TYPE_BITVECTOR: {
-                throw "Opensmt does not support bit-vectors";
-                break;
-            }
-            default:
-                assert(false);
-        }
+        PTRef val = model->evaluate(m_var);
+        expr::value var_value = expr::value(d_tm, osmt_to_sally(val));
 
         // Add the association
         m->set_variable_value(var, var_value);
@@ -376,7 +354,7 @@ void
 sally::smt::opensmt2_internal::add_variable(sally::expr::term_ref var, sally::smt::solver::variable_class f_class) {
   assert(!contains(d_variables, var));
   d_variables.push_back(var);
-
+  d_variable_classes.push_back(f_class);
 }
 
 void sally::smt::opensmt2_internal::interpolate(vector<sally::expr::term_ref> &out) {
@@ -402,6 +380,61 @@ ipartitions_t sally::smt::opensmt2_internal::get_A_mask() const {
     }
   }
   return A_mask;
+}
+
+void sally::smt::opensmt2_internal::generalize(sally::smt::solver::generalization_type type,
+                                               vector<expr::term_ref> &projection_out) {
+  // Get the model
+  expr::model::ref m = get_model();
+
+  if (output::trace_tag_is_enabled("opensmt2")) {
+    std::cerr << "model:" << (*m) << std::endl;
+  }
+
+  // Generalize with the current model
+  generalize(type, m, projection_out);
+}
+
+void
+sally::smt::opensmt2_internal::generalize(sally::smt::solver::generalization_type type, sally::expr::model::ref model,
+                                          vector<expr::term_ref> &projection_out) {
+  // When we generalize backward we eliminate all variables except A-vars from T and B
+  // When we generalize forward we eliminate all variables except B-vars from A and T
+
+  std::vector<expr::term_ref> assertions;
+  for (std::size_t i = 0; i < d_stacked_assertions.d_assertions.size(); ++i) {
+    bool needs_elimination = (type == solver::GENERALIZE_BACKWARD && d_stacked_assertions.d_assertion_classes[i] != solver::formula_class::CLASS_A)
+        || (type == solver::GENERALIZE_FORWARD && d_stacked_assertions.d_assertion_classes[i] != solver::formula_class::CLASS_B);
+    if (needs_elimination) {
+      assertions.push_back(d_stacked_assertions.d_assertions[i]);
+    }
+  }
+
+  PTRef fla = sally_to_osmt(d_tm.mk_and(assertions));
+
+  vec<PTRef> vars_to_eliminate;
+  for (std::size_t i = 0; i < d_variables.size(); ++i) {
+    bool needs_elimination = (type == solver::GENERALIZE_BACKWARD && d_variable_classes[i] != solver::formula_class::CLASS_A)
+                             || (type == solver::GENERALIZE_FORWARD && d_variable_classes[i] != solver::formula_class::CLASS_B);
+    if (needs_elimination) {
+      vars_to_eliminate.push(sally_to_osmt(d_variables[i]));
+    }
+  }
+  auto osmt_model = to_osmt_model(model);
+  auto res = get_main_solver().getLogic().generalize(fla, vars_to_eliminate, *osmt_model);
+  projection_out.push_back(osmt_to_sally(res));
+}
+
+std::unique_ptr<Model> sally::smt::opensmt2_internal::to_osmt_model(sally::expr::model::ref model) {
+  Model::Evaluation eval;
+  for (auto var : d_variables) {
+    if (!model->has_value(var)) { continue; }
+    PTRef osmt_var = sally_to_osmt(var);
+    PTRef osmt_val = sally_to_osmt(model->get_variable_value(var).to_term(d_tm));
+    eval.insert(std::make_pair(osmt_var, osmt_val));
+  }
+
+  return std::unique_ptr<Model>(new ExplicitModel(get_logic(), eval));
 }
 
 #endif // WITH_OPENSMT2

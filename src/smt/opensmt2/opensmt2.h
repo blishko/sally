@@ -75,6 +75,16 @@ public:
 
   /** Collect garbage */
   void gc();
+
+  /**
+   * Generalize the last call to check assuming the result was SAT.
+   */
+  void generalize(generalization_type type, std::vector<expr::term_ref> &projection_out);
+
+  /**
+   * Generalize the given model.
+   */
+  void generalize(generalization_type type, expr::model::ref m, std::vector<expr::term_ref> &projection_out);
 };
 
 }

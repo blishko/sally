@@ -78,6 +78,8 @@ bool opensmt2::supports(solver::feature f) const {
   switch (f) {
   case solver::feature::INTERPOLATION:
     return true;
+  case solver::feature::GENERALIZATION:
+    return true;
   default:
     return false;
   }
@@ -99,6 +101,19 @@ void opensmt2::gc_collect(const expr::gc_relocator & gc_reloc) {
 
 void opensmt2::gc() {
   solver::gc();
+}
+
+void opensmt2::generalize(solver::generalization_type type, vector<expr::term_ref> &projection_out) {
+  TRACE("opensmt2") << "opensmt2[" << d_internal->instance() << "]: generalizing" << std::endl;
+  assert(!d_B_variables.empty());
+  d_internal->generalize(type, projection_out);
+}
+
+void
+opensmt2::generalize(solver::generalization_type type, expr::model::ref m, vector<expr::term_ref> &projection_out) {
+  TRACE("opensmt2") << "opensmt2[" << d_internal->instance() << "]: generalizing" << std::endl;
+  assert(!d_B_variables.empty());
+  d_internal->generalize(type, m, projection_out);
 }
 
 }

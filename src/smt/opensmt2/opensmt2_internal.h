@@ -29,6 +29,30 @@
 namespace sally {
 namespace smt {
 
+struct stacked_assertions {
+  std::vector<expr::term_ref_strong> d_assertions;
+  std::vector<solver::formula_class> d_assertion_classes;
+  std::vector<std::size_t> d_assertions_size;
+
+  void push() {
+    d_assertions_size.push_back(d_assertions.size());
+  }
+
+  void pop() {
+    std::size_t size = d_assertions_size.back();
+    d_assertions_size.pop_back();
+    while (d_assertions.size() > size) {
+      d_assertions.pop_back();
+      d_assertion_classes.pop_back();
+    }
+  }
+
+  void add_assertion(expr::term_ref_strong assertion, solver::formula_class fla_class) {
+    d_assertions.push_back(assertion);
+    d_assertion_classes.push_back(fla_class);
+  }
+};
+
 class opensmt2_internal {
 public:
     /** Constructor */
@@ -55,6 +79,10 @@ public:
 
     void interpolate(std::vector<expr::term_ref> & out);
 
+    void generalize(smt::solver::generalization_type type, std::vector<expr::term_ref>& projection_out);
+
+    void generalize(smt::solver::generalization_type type, expr::model::ref model, std::vector<expr::term_ref>& projection_out);
+
 
 private:
 
@@ -72,7 +100,10 @@ private:
 
     PTRef mk_osmt_term(expr::term_op op, size_t n, const vector<PTRef> &children);
 
+    std::unique_ptr<Model> to_osmt_model(expr::model::ref model);
+
     std::vector<expr::term_ref> d_variables;
+    std::vector<solver::variable_class> d_variable_classes;
 
     expr::term_manager& d_tm;
 
@@ -87,6 +118,8 @@ private:
     unsigned int d_stack_level = 0;
 
     std::vector<std::vector<unsigned int>> d_stacked_A_partitions;
+
+    stacked_assertions d_stacked_assertions;
 
     unsigned int d_current_partition = 0;
 
