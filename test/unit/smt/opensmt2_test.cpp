@@ -206,6 +206,7 @@ BOOST_AUTO_TEST_CASE(osmt2_generalization_experiment) {
   // else
   //    A4: y' = y + 2
   term_ref b = tm.mk_variable("b", tm.boolean_type());
+  osmt2->add_variable(b, smt::solver::CLASS_B); // Variable should be explicitly marked
   term_ref y_inc2 = tm.mk_term(TERM_ADD, y_inc, one);
   term_ref A4 = tm.mk_term(TERM_EQ, y_next, y_inc2);
   term_ref A5 = tm.mk_term(TERM_ITE, b, A2, A4);
