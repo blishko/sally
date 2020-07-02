@@ -26,7 +26,7 @@ namespace{
 
 unsigned int sally::smt::opensmt2_internal::s_instance_id = 0;
 
-sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, const sally::options &opts)
+sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, const sally::options &opts, bool interpolate)
 : d_tm(tm)
 , d_instance(s_instance_id++)
 , d_term_cache()
@@ -38,7 +38,7 @@ sally::smt::opensmt2_internal::opensmt2_internal(sally::expr::term_manager &tm, 
     if (logic_str == "QF_LRA") {
       auto config = std::unique_ptr<SMTConfig>(new SMTConfig());
       const char *msg;
-      bool res = config->setOption(config->o_produce_inter, SMTOption{1}, msg);
+      bool res = config->setOption(config->o_produce_inter, SMTOption{interpolate}, msg);
       assert(res);
       (void) res;
       assert(strcmp(msg, "ok") == 0);

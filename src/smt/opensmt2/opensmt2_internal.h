@@ -56,7 +56,7 @@ struct stacked_assertions {
 class opensmt2_internal {
 public:
     /** Constructor */
-    opensmt2_internal(expr::term_manager & tm, const options & opts);
+    opensmt2_internal(expr::term_manager & tm, const options & opts, bool interpolate = true);
 
     ~opensmt2_internal() {
       delete d_osmt;

@@ -24,11 +24,12 @@ add_library(smt
   dreal/dreal_internal.cpp
   dreal/dreal_term_cache.cpp
   d4y2/d4y2.cpp
-)
+  o2o2/o2o2.cpp
+  opensmt2/opensmt2_nonitp.cpp )
 
 if (OPENSMT2_FOUND)
 set_source_files_properties(
-  opensmt2/opensmt2.cpp opensmt2/opensmt2_internal.cpp opensmt2/opensmt2_term_cache.cpp
+  opensmt2/opensmt2.cpp opensmt2/opensmt2_internal.cpp opensmt2/opensmt2_term_cache.cpp opensmt2/opensmt2_nonitp.cpp
   PROPERTIES 
     LANGUAGE CXX
     COMPILE_FLAGS "-std=c++11" 

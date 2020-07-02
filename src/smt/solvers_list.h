@@ -26,6 +26,8 @@
 #include "smt/mathsat5/mathsat5_info.h"
 #include "smt/z3/z3_info.h"
 #include "smt/opensmt2/opensmt2_info.h"
+#include "smt/opensmt2/opensmt2_nonitp_info.h"
+#include "smt/o2o2/o2o2_info.h"
 #include "smt/y2m5/y2m5_info.h"
 #include "smt/y2z3/y2z3_info.h"
 #include "smt/y2o2/y2o2_info.h"
@@ -55,6 +57,8 @@ sally::smt::solver_data::solver_data() {
 #endif
 #ifdef WITH_OPENSMT2
   add_module_info<opensmt2_info>();
+  add_module_info<opensmt2_nonitp_info>();
+  add_module_info<o2o2_info>();
 #ifdef WITH_YICES2
   add_module_info<y2o2_info>();
 #endif // WITH_YICES2
