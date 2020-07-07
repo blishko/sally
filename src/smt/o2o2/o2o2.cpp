@@ -58,7 +58,7 @@ o2o2::o2o2(expr::term_manager& tm, const options& opts, utils::statistics& stats
 {
   d_opensmt2 = factory::mk_solver("opensmt2_nonitp", tm, opts, stats);
   d_iopensmt2 = new delayed_wrapper("opensmt2_delayed", tm, opts, stats, factory::mk_solver("opensmt2", tm, opts, stats));
-  s_instance ++;
+  d_instance = s_instance ++;
 }
 
 o2o2::~o2o2() {
@@ -68,7 +68,7 @@ o2o2::~o2o2() {
 }
 
 void o2o2::add(expr::term_ref f, formula_class f_class) {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: adding " << f << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: adding " << f << std::endl;
   d_opensmt2->add(f, f_class);
   d_iopensmt2->add(f, f_class);
   d_last_opensmt2_result = UNKNOWN;
@@ -76,20 +76,20 @@ void o2o2::add(expr::term_ref f, formula_class f_class) {
 }
 
 solver::result o2o2::check() {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: check()" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: check()" << std::endl;
   d_last_opensmt2_result = d_opensmt2->check();
   d_last_iopensmt2_result = UNKNOWN;
   return d_last_opensmt2_result;
 }
 
 expr::model::ref o2o2::get_model() const {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: get_model()" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: get_model()" << std::endl;
   assert(d_last_opensmt2_result == SAT);
   return d_opensmt2->get_model();
 }
 
 void o2o2::push() {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: push()" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: push()" << std::endl;
   assert(d_last_opensmt2_result != UNSAT);
   d_opensmt2->push();
   d_iopensmt2->push();
@@ -98,7 +98,7 @@ void o2o2::push() {
 }
 
 void o2o2::pop() {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: pop()" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: pop()" << std::endl;
   d_iopensmt2->pop();
   d_opensmt2->pop();
   d_last_iopensmt2_result = UNKNOWN;
@@ -107,18 +107,18 @@ void o2o2::pop() {
 
 
 void o2o2::generalize(generalization_type type, std::vector<expr::term_ref>& out) {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: generalizing" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: generalizing" << std::endl;
   assert(d_last_opensmt2_result == SAT);
   d_opensmt2->generalize(type, out);
 }
 
 void o2o2::generalize(generalization_type type, expr::model::ref m, std::vector<expr::term_ref>& out) {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: generalizing" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: generalizing" << std::endl;
   d_opensmt2->generalize(type, m, out);
 }
 
 void o2o2::interpolate(std::vector<expr::term_ref>& out) {
-  TRACE("o2o2") << "o2o2[" << s_instance << "]: interpolating" << std::endl;
+  TRACE("o2o2") << "o2o2[" << d_instance << "]: interpolating" << std::endl;
   if (d_last_iopensmt2_result == UNKNOWN) {
     d_last_iopensmt2_result = d_iopensmt2->check();
   }
@@ -134,9 +134,9 @@ void o2o2::add_variable(expr::term_ref var, variable_class f_class) {
 bool o2o2::supports(feature f) const {
   switch (f) {
     case GENERALIZATION:
-      return d_opensmt2->supports(f);
+      return true;
     case INTERPOLATION:
-      return d_iopensmt2->supports(f);
+      return true;
     case UNSAT_CORE:
       return false;
     default:

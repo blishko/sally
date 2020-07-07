@@ -43,6 +43,7 @@ class o2o2 : public solver {
   solver* d_iopensmt2;
 
   static size_t s_instance;
+  size_t d_instance;
 
   /** Last result of opensmt */
   result d_last_opensmt2_result;
